@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('routes', function (Blueprint $table) {
-            $table->id();
-            $table->string('route_id');
-            $table->string('route_name');
-            $table->string('route_headsign');
-            $table->foreignId('mode_id')->constrained('transit_modes')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('routes')) {
+            Schema::create('routes', function (Blueprint $table) {
+                $table->id();
+                $table->string('route_id');
+                $table->string('route_name');
+                $table->string('route_headsign');
+                $table->foreignId('mode_id')->constrained('transit_modes')->onDelete('cascade');
+            });
+        }
     }
 
     /**
