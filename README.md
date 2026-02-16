@@ -13,4 +13,4 @@ A laravel app for generating API's related to a transit agency. The agency in th
 7. ./vendor/bin/sail artisan migrate </br>
 8. From the JSON directory copy 'calendar.json' to storage/app/public/ </br>
 9. From the JSON directory copy 'schedules' sub-directory to storage/app/public/ </br>
-At this point the api is available at http://localhost/api/trainview/VYTA where 'VYTA' is the stop_id for 'Vytilla' stop. The API shows the arrival time for both direction for the stop. When  the app is not in use stop the SAIL containers by running ./vendor/bin/sail down  
+<p>At this point the api is available at http://localhost/api/trainview/VYTA where 'VYTA' is the stop_id for 'Vytilla' stop. The API shows the arrival time for both direction for the stop. When  the app is not in use stop the SAIL containers by running ./vendor/bin/sail down </p>
