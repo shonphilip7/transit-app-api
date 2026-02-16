@@ -1,4 +1,4 @@
-A laravel app for generating API's related to a transit agency. The agency in this case is Kochi Metro Rail Ltd which operates in the city of Ernakulam.</br>. This app uses the JSON files generated using scripts in https://github.com/shonphilip7/sample-GTFS-scripts repo for the API
+A laravel app for generating API's related to a transit agency. The agency in this case is Kochi Metro Rail Ltd which operates in the city of Ernakulam. This app uses the JSON files generated using scripts in https://github.com/shonphilip7/sample-GTFS-scripts repo for the API
 ##Prerequisites
 1. Git </br>
 2. Docker </br>
