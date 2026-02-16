@@ -1,9 +1,9 @@
-A laravel app for generating API's related to a transit agency. The agency in this case is Kochi Metro Rail Ltd which operates in the city of Ernakulam. This app uses the JSON files generated using scripts in https://github.com/shonphilip7/sample-GTFS-scripts repo for the API
-##Prerequisites
+A laravel app for generating API's related to a transit agency. The agency in this case is Kochi Metro Rail Ltd which operates in the city of Ernakulam. This app uses the JSON files generated using scripts in https://github.com/shonphilip7/sample-GTFS-scripts repo for the API </br>
+## Prerequisites
 1. Git </br>
 2. Docker </br>
 3. The JSON directory generated in https://github.com/shonphilip7/sample-GTFS-scripts repo. </br> 
-##Steps to run locally
+## Steps to run locally
 1. git clone git clone https://github.com/shonphilip7/transit-app-api.git </br>
 2. cd transit-app-api </br>
 3. docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/html laravelsail/php83-composer:latest composer install --ignore-platform-reqs. (This command runs the composer install on the laravel SAIL container) </br>
