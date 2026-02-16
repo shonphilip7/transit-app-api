@@ -7,7 +7,7 @@ A laravel app for generating API's related to a transit agency. The agency in th
 1. git clone git clone https://github.com/shonphilip7/transit-app-api.git </br>
 2. cd transit-app-api </br>
 3. docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/html laravelsail/php83-composer:latest composer install --ignore-platform-reqs. (This command runs the composer install on the laravel SAIL container) </br>
-4.cp .env.example .env (Make sure .env is configured for SAIL-mysql and SAIL-redis) </br>
+4. cp .env.example .env (Make sure .env is configured for SAIL-mysql and SAIL-redis) </br>
 5. ./vendor/bin/sail up -d </br>
 6. ./vendor/bin/sail artisan key:generate </br>
 7. ./vendor/bin/sail artisan migrate </br>
