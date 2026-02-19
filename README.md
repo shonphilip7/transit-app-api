@@ -15,7 +15,7 @@
 7. ./vendor/bin/sail artisan migrate
 8. From the files genereated in repo mentioned in prerequisites copy 'calendar.json', schedules sub-directory and KML directory to storage/app/public/
 <p>
-    At this point the api's are available at:</p> </br> 
+    At this point the api's are available at: </br> 
     1. http://localhost/api/trainview/VYTA where 'VYTA' is the stop_id for 'Vytilla' stop. The API shows the arrival time for both direction for the stop.</br>
     2. http://localhost/api/kml/R1/0 where R1 is the route_id,0 is the direction_id. The API shows the route path (lat,lon)</br>
 </p>   
