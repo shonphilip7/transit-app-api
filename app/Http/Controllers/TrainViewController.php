@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Helpers\TrainViewHelper;
+use App\Helpers\CommonHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -16,10 +17,11 @@ class TrainViewController extends Controller
         $trainview = array();
         try {
             $trainview_helper = new TrainViewHelper();
+            $common_helper = new CommonHelper();
             /**
              * Get calendar data from redis or the JSON file
              */
-            $calendar_data = $trainview_helper->getCalendarData();
+            $calendar_data = $common_helper->getCalendarData();
             if (count($calendar_data) >=1) {
                 $release = null;
                 $services = array();
@@ -27,15 +29,9 @@ class TrainViewController extends Controller
                 $formattedDate = $today->format('Ymd'); //Get current date
                 /**
                  * The GTFS file from kochi metro only has entries till 20251231
-                 * so need to improvise.
+                 * so need to improvise. 
                  */
-                $calendar_data_last_key = array_key_last(array_keys($calendar_data));
-                $calendar_last_date = array_keys($calendar_data)[$calendar_data_last_key];
-                $date1 = Carbon::parse($formattedDate);
-                $date2 = Carbon::parse($calendar_last_date);
-                if ($date1->gt($date2)) {
-                    $formattedDate = $trainview_helper->getLastDaysOfYear('2025', $today->englishDayOfWeek);; 
-                }
+                $formattedDate = $common_helper->adjustedDate($formattedDate, $calendar_data, $today);
                 $release = $calendar_data[$formattedDate]['release_name'];
                 $services = $calendar_data[$formattedDate]['service_id'];
                 if (($release !== null) && (count($services) > 0)) {
@@ -61,29 +57,6 @@ class TrainViewController extends Controller
                         $trainview[$rr_route]['Inbound'] = $rr_response['Inbound'];
                         $trainview[$rr_route]['Outbound'] = $rr_response['Outbound'];
                     }
-                    /*$westbound_trains = array_merge(
-                        $trainview['AIR']['Inbound'], 
-                        $trainview['CHW']['Inbound'], 
-                        $trainview['MED']['Inbound'], 
-                        $trainview['PAO']['Inbound'],
-                        $trainview['TRE']['Inbound'],
-                        $trainview['WIL']['Inbound']
-                    );
-                    // Get top 4 results
-                    $trainview['next_to_suburban'] = collect($westbound_trains)->sortBy('eta')->take(4);
-                    $eastbound_trains = array_merge(
-                        $trainview['WTR']['Outbound'],
-                        $trainview['CHE']['Outbound'],
-                        $trainview['FOX']['Outbound'],
-                        $trainview['LAN']['Outbound'],
-                        $trainview['NOR']['Outbound'],
-                        $trainview['WAR']['Outbound']
-                    );
-                    // Get top 4 results
-                    $trainview['next_to_temple'] = collect($eastbound_trains)->sortBy('eta')->take(4); 
-                    // Get alerts to display along with result
-                    $service_alerts = $trainview_helper->getAlerts('alerts API');
-                    $trainview['alerts'] = $service_alerts->toArray();*/
                 } else {
                     Log::error('Error message: Unable to get release or service');
                 }

@@ -17,39 +17,6 @@ class TrainViewHelper
         $this->cache_helper = new CacheHelper();
     }
     /**
-     * Call the calendar API
-     * 
-     * The function checks if the data is in redis else it calls the API and
-     * stores data in redis for faster response time
-     * 
-     * @return array calendar_data The calendar data from the static JSON files
-     */
-    public function getCalendarData()
-    {
-        $calendar_data = array();
-        $calendarJsonData = null;
-        try {
-            /**
-             * Try the redis for an entry else get it from the actual file
-             */
-            if ($this->cache_helper->connect()) {
-                $calendarJsonData = $this->cache_helper->get('calendar_data');
-            }
-            if ($calendarJsonData !== null) {
-                $calendar_data = json_decode($calendarJsonData, true);
-            } else {
-                $calendar_data = Storage::disk('public')->json('calendar.json');
-                if ($this->cache_helper->connect()) {
-                    $this->cache_helper->set('calendar_data', json_encode($calendar_data), 86400);
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Error message: '.$e->getMessage());
-            $calendar_data = null;
-        }
-        return $calendar_data;
-    }
-    /**
      * Call the schedules API
      * 
      * The function checks if the data is in redis else it calls the API and stores data in redis 
@@ -225,37 +192,5 @@ class TrainViewHelper
             });
         }
         return $service_message;
-    }
-    /**
-     * This class was added due to the limitation in the KMRL open data.
-     * (Last entry provided in GTFS is for date 2025-12-31). In the year 2026 
-     * if the current day is Sunday then this function would get the last date 
-     * of that day for the previous year which in this case would be 2025-12-28. 
-     * 
-     * @param string $year The year to search the dates
-     * @param string $day_of_week Sunday, Monday, Tuesday.....
-     */
-    public function getLastDaysOfYear($year, $day_of_week)
-    {
-        $calendar_week = array(
-            'Sunday' => Carbon::SUNDAY, 
-            'Monday' => Carbon::MONDAY, 
-            'Tuesday' => CARBON::TUESDAY,
-            'Wednesday' => CARBON::WEDNESDAY,
-            'Thursday'=> CARBON::THURSDAY,
-            'Friday' => CARBON::FRIDAY,
-            'Saturday' => CARBON::SATURDAY
-        );
-        /**
-         * Create a Carbon instance for the first day of the year following 
-         * the target year. For example, for the year 2025, this creates an 
-         * instance for 2026-01-01.
-         */
-        $firstDayOfNextYear = Carbon::create($year + 1, 1, 1, 0, 0, 0);
-        // Subtract one second to get the very last moment of the target year (2025-12-31 23:59:59)
-        $lastMomentOfYear = $firstDayOfNextYear->subSecond();
-        // Now, use the last moment of the year instance and go to the day provided in the param.
-        $lastSunday = $lastMomentOfYear->lastOfMonth($calendar_week[$day_of_week]);
-        return $lastSunday->format('Ymd');
     }
 }
