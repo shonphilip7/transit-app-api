@@ -3,6 +3,8 @@ namespace App\Helpers;
 
 use App\Helpers\CacheHelper;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Common methods used in more than one controllers
  */
