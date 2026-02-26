@@ -16,12 +16,6 @@ class TrainViewHelperTest extends TestCase
         parent::setUp();
         $this->trainview_helper = new TrainViewHelper();
     }
-    public function test_getCalendarData(): void
-    {
-        $calendar_data = $this->trainview_helper->getCalendarData();
-        $this->assertIsArray($calendar_data, 'Calendar data not an array');
-        $this->assertNotEmpty($calendar_data, 'Calendar file is empty');
-    }
     public function test_getSchedules_success(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');

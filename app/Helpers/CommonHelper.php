@@ -80,8 +80,8 @@ class CommonHelper
         // Subtract one second to get the very last moment of the target year (2025-12-31 23:59:59)
         $lastMomentOfYear = $firstDayOfNextYear->subSecond();
         // Now, use the last moment of the year instance and go to the day provided in the param.
-        $lastSunday = $lastMomentOfYear->lastOfMonth($calendar_week[$day_of_week]);
-        return $lastSunday->format('Ymd');
+        $lastGivenDay = $lastMomentOfYear->lastOfMonth($calendar_week[$day_of_week]);
+        return $lastGivenDay->format('Ymd');
     }
     /**
      * This function was added due to the limitation in the KMRL open data.

@@ -15,6 +15,11 @@ class CacheHelperTest extends TestCase
         parent::setUp();
         $this->redis_service = new CacheHelper();
     }
+    protected function tearDown(): void
+    {
+        $this->redis_service = null;
+        parent::tearDown();
+    }
     public function test_redis_can_connect(): void
     {
         $connection = false;
@@ -31,6 +36,6 @@ class CacheHelperTest extends TestCase
     {
         $retrived_data = false;
         $retrived_data = $this->redis_service->get('Test');
-        $this->assertEquals('Value', $retrived_data, 'String not equal');
+        $this->assertEquals('Value', $retrived_data, 'Not able to get data to redis');
     }
 }
