@@ -3,7 +3,7 @@
 ## Prerequisites
 1. Git 
 2. Docker 
-3. Files generated from the https://github.com/shonphilip7/sample-GTFS-scripts repo.
+3. Files generated from the https://github.com/shonphilip7/sample-GTFS-scripts repo. Since that repo is private, these files are included within this Laravel project in the public/assets/ folder. 
 
 ## Steps to run locally
 1. git clone git clone https://github.com/shonphilip7/transit-app-api.git
