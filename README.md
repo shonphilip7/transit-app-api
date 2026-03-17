@@ -16,8 +16,8 @@
 8. Copy "calendar.json", "schedules" sub-directory and "KML" from public/assets/ folder to storage/app/public/. Ideally, these static files would be in a central location like a S3 bucket but this should suffice for now.
 <p>
     At this point the api's are available: </br> 
-    1. http://localhost/api/trainview/{station_id}: The API shows the arrival time in both direction for the station passed as parameter. The station ids are sub-directories located in storage/app/public/schedules/stops/R1/. Ex: VYTA for Vytilla, TPHT for Thrippunithura etc. A sample API call would be http://localhost/api/trainview/VYTA </br>
-    2. http://localhost/api/kml/{route_id}/{direction_id}: The API shows the path (lat,lon) for the route passed. KMRL has only one route which is R1 whereas the direction can be either 0 or 1. A sample API call would be http://localhost/api/kml/R1/0</br>
+    1. <b>http://localhost/api/trainview/{station_id}</b>: The API shows the arrival time in both direction for the station passed as parameter. The station ids are sub-directories located in storage/app/public/schedules/stops/R1/. Ex: VYTA for Vytilla, TPHT for Thrippunithura etc. A sample API call would be http://localhost/api/trainview/VYTA </br>
+    2. <b>http://localhost/api/kml/{route_id}/{direction_id}</b>: The API shows the path (lat,lon) for the route passed. KMRL has only one route which is R1 whereas the direction can be either 0 or 1. A sample API call would be http://localhost/api/kml/R1/0</br>
     3. There are also API's for register and login functionality. 
 </p>   
 <p>When  the app is not in use stop the SAIL containers by running ./vendor/bin/sail down </p>
