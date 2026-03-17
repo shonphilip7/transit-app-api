@@ -13,7 +13,7 @@
 5. ./vendor/bin/sail up -d </br>
 6. ./vendor/bin/sail artisan key:generate
 7. ./vendor/bin/sail artisan migrate
-8. From the files genereated in repo mentioned in prerequisites, copy "calendar.json", "schedules" sub-directory and "KML" directory to storage/app/public/. Ideally, these static files would be in a central location like a S3 bucket but for simplicity it is included in Laravel app storage.
+8. Copy "calendar.json", "schedules" sub-directory and "KML" from public/assets/ folder to storage/app/public/. Ideally, these static files would be in a central location like a S3 bucket but this should suffice for now.
 <p>
     At this point the api's are available: </br> 
     1. http://localhost/api/trainview/{station_id}: The API shows the arrival time in both direction for the station passed as parameter. The station ids are sub-directories located in storage/app/public/schedules/stops/R1/. Ex: VYTA for Vytilla, TPHT for Thrippunithura etc. A sample API call would be http://localhost/api/trainview/VYTA </br>
