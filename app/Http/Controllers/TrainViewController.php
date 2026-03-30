@@ -11,7 +11,12 @@ use Illuminate\Support\Facades\Http;
 
 class TrainViewController extends Controller
 {
-    //
+    /**
+     * The function to generate the trainview schedule API data
+     *
+     * @param string $stop_id Stop ID (ex:VYTA, THPT...)
+     * @return array $trainview Inbound/outbound timings for the stop
+     */
     public function index($stop_id)
     {
         $trainview = array();
@@ -66,5 +71,22 @@ class TrainViewController extends Controller
             $trainview = array();
         }
         return $trainview;
+    }
+    /**
+     * API for getting all routes of the transit agency
+     *
+     * @return array $routes Stores all distinct routes of the transit agency
+     */
+    public function getRoutes()
+    {
+        $routes = array();
+        try {
+            $trainview_helper = new TrainViewHelper();
+            $routes = $trainview_helper->getRoutes();
+        } catch (Exception $e) {
+            Log::error('Error message getting routes in API: Caught exception '.$e->getMessage());
+            $routes = array();
+        }
+        return $routes;
     }
 }
