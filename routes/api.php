@@ -18,7 +18,14 @@ Route::get('/adjustments-data', [SwiftlyAdjustmentController::class, 'crudAdjust
  * TrainView API ex: http://localhost/api/trainview/VYTA
  */
 Route::get('/trainview/{stop_id}', [TrainViewController::class, 'index']);
+/**
+ * API for listing all transit routes
+ */
 Route::get('/routes', [TrainViewController::class, 'getRoutes']);
+/**
+ * API for listing all stops of a given line
+ */
+Route::get('/{line}/stops', [TrainViewController::class, 'getStops']);
 /**
  * KML API ex: http://localhost/api/kml/R1/1
  */

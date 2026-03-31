@@ -89,4 +89,22 @@ class TrainViewController extends Controller
         }
         return $routes;
     }
+    /**
+     * API for getting all stops of the given route
+     *
+     * @param string $line Transit agency route
+     * @return array $stops Stores all stops of the given route
+     */
+    public function getStops($line)
+    {
+        $stops = array();
+        try {
+            $trainview_helper = new TrainViewHelper();
+            $stops = $trainview_helper->getStops($line);
+        } catch (Exception $e) {
+            Log::error('Error message getting stops in API: Caught exception '.$e->getMessage());
+            $stops = array();
+        }
+        return $stops;
+    }
 }

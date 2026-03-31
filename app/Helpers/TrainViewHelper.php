@@ -194,7 +194,7 @@ class TrainViewHelper
         return $service_message;
     }
     /**
-     * Checks to see if their is an entry in cache for routes else
+     * Checks to see if there is an entry in cache for routes else
      * gets it from the raw JSON file stored in the public storage directory.
      *
      * @return array $routes Stores all routes of the transit agency
@@ -220,5 +220,38 @@ class TrainViewHelper
             $routesJsonData = null;
         }
         return $routes;
+    }
+    /**
+     * Checks to see if there is an entry in cache for stops for the given line
+     * else gets it from the raw JSON file stored in the public storage directory.
+     *
+     * @param string $line Transit route
+     * @return array $stops Stores all stops of the given route
+     */
+    public function getStops($line)
+    {
+        $stops = array();
+        $stopJsonData = null;
+        try {
+            if ($this->cache_helper->connect()) {
+                $stopJsonData = $this->cache_helper->get($line.'_stops');
+            }
+            if ($stopJsonData !== null) {
+                $stops = json_decode($stopJsonData, true);
+            } else {
+                $stops = Storage::disk('public')->json('stops/'.$line.'/stops.json');
+                if ($this->cache_helper->connect()) {
+                    $this->cache_helper->set($line.'_stops', json_encode($stops), 86400);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error message getting stops: '.$e->getMessage());
+            $stopJsonData = null;
+        }
+        if (count($stops) >=1) {
+            $collection = collect($stops);
+            $stops = $collection->unique('stop_id')->toArray();
+        }
+        return $stops;
     }
 }
