@@ -17,7 +17,7 @@ class TrainViewController extends Controller
      * @param string $stop_id Stop ID (ex:VYTA, THPT...)
      * @return array $trainview Inbound/outbound timings for the stop
      */
-    public function index($stop_id)
+    public function index($rr_route, $stop_id)
     {
         $trainview = array();
         try {
@@ -48,20 +48,13 @@ class TrainViewController extends Controller
                     $next_outbound_trips = collect();
                     $service_alerts = collect();
                     /**
-                     * Get all routes of the transit agency. Ideally this would be from the routes.txt 
-                     * file but since this is a test, hardcoding it for now. 
+                     * Get schedules for the given stop.
                      */
-                    $rr_routes = array('R1');
-                    foreach ($rr_routes as $rr_route) {
-                        /**
-                         * Get schedules for the given stop.
-                         */
-                        $rr_schedule = $trainview_helper->getSchedules($rr_route, $stop_id);
-                        $rr_trips = $trainview_helper->getTrips($rr_schedule, $release, $services);
-                        $rr_response = $trainview_helper->buildResponse($rr_trips);
-                        $trainview[$rr_route]['Inbound'] = $rr_response['Inbound'];
-                        $trainview[$rr_route]['Outbound'] = $rr_response['Outbound'];
-                    }
+                    $rr_schedule = $trainview_helper->getSchedules($rr_route, $stop_id);
+                    $rr_trips = $trainview_helper->getTrips($rr_schedule, $release, $services);
+                    $rr_response = $trainview_helper->buildResponse($rr_trips);
+                    $trainview[$rr_route]['Inbound'] = $rr_response['Inbound'];
+                    $trainview[$rr_route]['Outbound'] = $rr_response['Outbound'];
                 } else {
                     Log::error('Error message: Unable to get release or service');
                 }
