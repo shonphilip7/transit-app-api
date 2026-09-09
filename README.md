@@ -182,6 +182,7 @@ Authenticates an existing user and returns an access token.
 * **Headers:** 
     * `Accept: application/json`
     * `Content-Type: application/json`
+
 **Request Body (JSON):**
 | Field | Type | Required | Description | Example |
 | :--- | :--- | :--- | :--- | :--- |
@@ -213,29 +214,6 @@ Invalidates and revokes the authenticated user's current API access token, secur
 * **Headers:** 
     * `Accept: application/json`
     * `Authorization: Bearer <token>`
+
 **Request Body:** None
 **Behavior:** Upon a successful request, Laravel Sanctum will delete the current token record from the database. The Ionic app should then delete the token from its local storage and redirect the user to the login screen.
-
-
-1. git clone git clone https://github.com/shonphilip7/transit-app-api.git
-2. cd transit-app-api
-3. docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/html laravelsail/php83-composer:latest composer install --ignore-platform-reqs.
-- docker run --rm: Creates a temporary container and automatically removes it once the execution finishes.
-- -u "$(id -u):$(id -g)": Runs the container under your host user's IDs so that generated files like the vendor folder do not end up with root-only permissions.
-- -v "$(pwd):/var/www/html": Mounts your current local project directory into the container.
-- -w /var/www/html: Sets the working directory inside the container.
-- laravelsail/php83-composer:latest: Uses the official lightweight Composer-ready PHP image provided by Laravel Sail.
-- composer install: Installs all required packages defined in your composer.json, including Sail itself.
-- --ignore-platform-reqs: Tells Composer to ignore platform requirements
-4. cp .env.example .env (Make sure .env is configured for SAIL-mysql and SAIL-redis)
-5. ./vendor/bin/sail up -d </br>
-6. ./vendor/bin/sail artisan key:generate
-7. ./vendor/bin/sail artisan migrate
-8. Copy all the contents from public/assets/ folder to storage/app/public/. Ideally, these static files would be in a central location like a S3 bucket but this should suffice for now.
-<p>
-    At this point the api's are available: </br> 
-    1. <b>http://localhost/api/trainview/{station_id}</b>: The API shows the arrival time in both direction for the station passed as parameter. The station ids are sub-directories located in storage/app/public/schedules/stops/R1/. Ex: VYTA for Vytilla, TPHT for Thrippunithura etc. A sample API call would be http://localhost/api/trainview/VYTA </br>
-    2. <b>http://localhost/api/kml/{route_id}/{direction_id}</b>: The API shows the path (lat,lon) for the route passed. KMRL has only one route which is R1 whereas the direction can be either 0 or 1. A sample API call would be http://localhost/api/kml/R1/0</br>
-    3. There are also API's for register and login functionality. 
-</p>   
-<p>When  the app is not in use stop the SAIL containers by running ./vendor/bin/sail down </p>
