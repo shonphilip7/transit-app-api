@@ -215,5 +215,5 @@ Invalidates and revokes the authenticated user's current API access token, secur
     * `Accept: application/json`
     * `Authorization: Bearer <token>`
 
-**Request Body:** None
+**Request Body:** None \
 **Behavior:** Upon a successful request, Laravel Sanctum will delete the current token record from the database. The Ionic app should then delete the token from its local storage and redirect the user to the login screen.
