@@ -159,7 +159,8 @@ Creates a new user account within the system.
 * **Method:** `POST`
 * **Headers:** 
     * `Accept: application/json`
-    * `Content-Type: application/json` \
+    * `Content-Type: application/json`
+
 **Request Body (JSON):**
 | Field | Type | Required | Description | Example |
 | :--- | :--- | :--- | :--- | :--- |
