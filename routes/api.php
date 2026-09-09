@@ -11,15 +11,15 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 /*
-* Swiftly Adjustments 
+* Swiftly Adjustments
 */
 Route::get('/adjustments-data', [SwiftlyAdjustmentController::class, 'crudAdjustments']);
 /**
- * TrainView API ex: http://localhost/api/trainview/VYTA
+ * TrainView API, ex: http://localhost/api/trainview/R1/VYTA
  */
 Route::get('/trainview/{rr_route}/{stop_id}', [TrainViewController::class, 'index']);
 /**
- * API for listing all transit routes
+ * API for listing all transit routes, ex: http://localhost/api/routes/
  */
 Route::get('/routes', [TrainViewController::class, 'getRoutes']);
 /**
