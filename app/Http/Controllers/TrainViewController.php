@@ -2,39 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Helpers\TrainViewHelper;
 use App\Helpers\CommonHelper;
+use App\Helpers\TrainViewHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 
 class TrainViewController extends Controller
 {
     /**
      * The function to generate the trainview schedule API data
      *
-     * @param string $stop_id Stop ID (ex:VYTA, THPT...)
+     * @param  string  $stop_id  Stop ID (ex:VYTA, THPT...)
      * @return array $trainview Inbound/outbound timings for the stop
      */
     public function index($rr_route, $stop_id)
     {
-        $trainview = array();
+        $trainview = [];
         try {
-            $trainview_helper = new TrainViewHelper();
-            $common_helper = new CommonHelper();
+            $trainview_helper = new TrainViewHelper;
+            $common_helper = new CommonHelper;
             /**
              * Get calendar data from redis or the JSON file
              */
             $calendar_data = $common_helper->getCalendarData();
-            if (count($calendar_data) >=1) {
+            if (count($calendar_data) >= 1) {
                 $release = null;
-                $services = array();
+                $services = [];
                 $today = Carbon::today('Asia/Kolkata');
-                $formattedDate = $today->format('Ymd'); //Get current date
+                $formattedDate = $today->format('Ymd'); // Get current date
                 /**
                  * The GTFS file from kochi metro only has entries till 20251231
-                 * so need to improvise. 
+                 * so need to improvise.
                  */
                 $formattedDate = $common_helper->adjustedDate($formattedDate, $calendar_data, $today);
                 $release = $calendar_data[$formattedDate]['release_name'];
@@ -61,10 +59,12 @@ class TrainViewController extends Controller
             }
         } catch (Exception $e) {
             Log::error('Error message: Caught exception '.$e->getMessage());
-            $trainview = array();
+            $trainview = [];
         }
+
         return $trainview;
     }
+
     /**
      * API for getting all routes of the transit agency
      *
@@ -72,32 +72,35 @@ class TrainViewController extends Controller
      */
     public function getRoutes()
     {
-        $routes = array();
+        $routes = [];
         try {
-            $trainview_helper = new TrainViewHelper();
+            $trainview_helper = new TrainViewHelper;
             $routes = $trainview_helper->getRoutes();
         } catch (Exception $e) {
             Log::error('Error message getting routes in API: Caught exception '.$e->getMessage());
-            $routes = array();
+            $routes = [];
         }
+
         return $routes;
     }
+
     /**
      * API for getting all stops of the given route
      *
-     * @param string $line Transit agency route
+     * @param  string  $line  Transit agency route
      * @return array $stops Stores all stops of the given route
      */
     public function getStops($line)
     {
-        $stops = array();
+        $stops = [];
         try {
-            $trainview_helper = new TrainViewHelper();
+            $trainview_helper = new TrainViewHelper;
             $stops = $trainview_helper->getStops($line);
         } catch (Exception $e) {
             Log::error('Error message getting stops in API: Caught exception '.$e->getMessage());
-            $stops = array();
+            $stops = [];
         }
+
         return $stops;
     }
 }

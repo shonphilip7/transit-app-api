@@ -1,7 +1,7 @@
 <?php
+
 namespace App\Helpers;
 
-use App\Helpers\CacheHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,21 +11,23 @@ use Illuminate\Support\Facades\Storage;
 class CommonHelper
 {
     private $cache_helper = false;
+
     public function __construct()
     {
-        $this->cache_helper = new CacheHelper();
+        $this->cache_helper = new CacheHelper;
     }
+
     /**
      * Call the calendar API
-     * 
+     *
      * The function checks if the data is in redis else it calls the API and
      * stores data in redis for faster response time
-     * 
+     *
      * @return array calendar_data The calendar data from the static JSON files
      */
     public function getCalendarData()
     {
-        $calendar_data = array();
+        $calendar_data = [];
         $calendarJsonData = null;
         try {
             /**
@@ -46,34 +48,36 @@ class CommonHelper
             Log::error('Error message: '.$e->getMessage());
             $calendar_data = null;
         }
+
         return $calendar_data;
     }
+
     /**
      * This function was added due to the limitation in the KMRL open data.
-     * (Last entry provided in GTFS is for date 2025-12-31). If the current 
-     * date is greater than 20251231 which it would be since we are in 2026 
-     * at the time of writing this code then select a date from the last week 
-     * of 2025 based on the current day name(Mon, Tue, Wed ...). So if today 
+     * (Last entry provided in GTFS is for date 2025-12-31). If the current
+     * date is greater than 20251231 which it would be since we are in 2026
+     * at the time of writing this code then select a date from the last week
+     * of 2025 based on the current day name(Mon, Tue, Wed ...). So if today
      * is Wednesday then get the date for the last Wednesday of the year 2025.
-     * 
-     * @param string $year The year to search the dates
-     * @param string $day_of_week Sunday, Monday, Tuesday.....
+     *
+     * @param  string  $year  The year to search the dates
+     * @param  string  $day_of_week  Sunday, Monday, Tuesday.....
      * @return string Date in Ymd format
      */
     public function getLastDaysOfYear($year, $day_of_week)
     {
-        $calendar_week = array(
-            'Sunday' => Carbon::SUNDAY, 
-            'Monday' => Carbon::MONDAY, 
+        $calendar_week = [
+            'Sunday' => Carbon::SUNDAY,
+            'Monday' => Carbon::MONDAY,
             'Tuesday' => CARBON::TUESDAY,
             'Wednesday' => CARBON::WEDNESDAY,
-            'Thursday'=> CARBON::THURSDAY,
+            'Thursday' => CARBON::THURSDAY,
             'Friday' => CARBON::FRIDAY,
-            'Saturday' => CARBON::SATURDAY
-        );
+            'Saturday' => CARBON::SATURDAY,
+        ];
         /**
-         * Create a Carbon instance for the first day of the year following 
-         * the target year. For example, for the year 2025, this creates an 
+         * Create a Carbon instance for the first day of the year following
+         * the target year. For example, for the year 2025, this creates an
          * instance for 2026-01-01.
          */
         $firstDayOfNextYear = Carbon::create($year + 1, 1, 1, 0, 0, 0);
@@ -81,19 +85,21 @@ class CommonHelper
         $lastMomentOfYear = $firstDayOfNextYear->subSecond();
         // Now, use the last moment of the year instance and go to the day provided in the param.
         $lastGivenDay = $lastMomentOfYear->lastOfMonth($calendar_week[$day_of_week]);
+
         return $lastGivenDay->format('Ymd');
     }
+
     /**
      * This function was added due to the limitation in the KMRL open data.
-     * (Last entry provided in GTFS is for date 2025-12-31).If the current 
-     * date is greater than 20251231 which it would be since we are in 2026 
-     * at the time of writing this code then select a date from the last week 
+     * (Last entry provided in GTFS is for date 2025-12-31).If the current
+     * date is greater than 20251231 which it would be since we are in 2026
+     * at the time of writing this code then select a date from the last week
      * of 2025 based on the current day name(Mon, Tue, Wed ...).
-     * 
-     * @param string $given_date This would be the current date in Ymd format
-     * @param array $calendar The data from the calendar json file
-     * @param string $current_day Current date in Illuminate\Support\Carbon format
-     * @return string $result Adjusted date in Ymd format 
+     *
+     * @param  string  $given_date  This would be the current date in Ymd format
+     * @param  array  $calendar  The data from the calendar json file
+     * @param  string  $current_day  Current date in Illuminate\Support\Carbon format
+     * @return string $result Adjusted date in Ymd format
      */
     public function adjustedDate($given_date, $calendar, $current_day)
     {
@@ -105,6 +111,7 @@ class CommonHelper
         if ($date1->gt($date2)) {
             $result = $this->getLastDaysOfYear('2025', $current_day->englishDayOfWeek);
         }
+
         return $result;
     }
 }

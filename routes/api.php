@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\KmlController;
+use App\Http\Controllers\SwiftlyAdjustmentController;
+use App\Http\Controllers\TrainViewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SwiftlyAdjustmentController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TrainViewController;
-use App\Http\Controllers\KmlController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();

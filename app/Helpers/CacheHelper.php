@@ -1,21 +1,25 @@
 <?php
+
 namespace App\Helpers;
 
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
+
 /**
  * A custom helper class for stuff related to Redis cache like get, set
  */
 class CacheHelper
 {
     private $redis = null;
+
     public function __construct()
     {
         $this->redis = Redis::connection();
     }
+
     /**
      * Pinging the redis connection
-     * 
+     *
      * @return bool $response True if there is a connection else false
      */
     public function connect()
@@ -24,7 +28,7 @@ class CacheHelper
         try {
             if (isset($this->redis)) {
                 $response = $this->redis->ping();
-                if (!$response) {
+                if (! $response) {
                     Log::error('Error message: No PONG from redis');
                     $response = false;
                 }
@@ -36,13 +40,16 @@ class CacheHelper
             Log::error('Error message: '.$e->getMessage());
             $response = false;
         }
+
         return $response;
     }
+
     /**
      * Set key-value to Redis
-     * @param string $key Redis key
-     * @param string $data Redis value
-     * @param int $expiry Redis data expiry in seconds
+     *
+     * @param  string  $key  Redis key
+     * @param  string  $data  Redis value
+     * @param  int  $expiry  Redis data expiry in seconds
      * @return bool $response True if successfully able to set key-value in Redis
      */
     public function set($key, $data, $expiry)
@@ -59,10 +66,13 @@ class CacheHelper
             Log::error('Error message: '.$e->getMessage());
             $response = false;
         }
+
         return $response;
     }
+
     /**
      * Get value from Redis based on key
+     *
      * @param string Redis key
      * @return mixed The actual data from redis else false
      */
@@ -75,6 +85,7 @@ class CacheHelper
             Log::error('Error message: '.$e->getMessage());
             $response = false;
         }
+
         return $response;
     }
 }

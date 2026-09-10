@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 use App\Helpers\AdjustmentHelper;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-//use App\Models\Adjustment;
+use Illuminate\Support\Facades\Log;
+
+// use App\Models\Adjustment;
 
 class SwiftlyAdjustmentController extends Controller
 {
@@ -22,23 +21,23 @@ class SwiftlyAdjustmentController extends Controller
             echo $post->detour_id.' '.$post->payload.' '.$post->response.'</br>';
         }
         dd();*/
-        $response = array();
+        $response = [];
         $request_protocol = env('DETOUR_API_DOMAIN_PROTOCOL');
         $request_domain = env('DETOUR_API_DOMAIN_NAME');
-        $swiftly_api_header = array(
-            "Authorization" => env('SWIFTLY_API_KEY'),
-            "Content-Type" => "application/json",
-            "Accept" => "application/json"
-        );
-        $detours_with_kml = array();
-        $adjustment_helper = new AdjustmentHelper();
+        $swiftly_api_header = [
+            'Authorization' => env('SWIFTLY_API_KEY'),
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ];
+        $detours_with_kml = [];
+        $adjustment_helper = new AdjustmentHelper;
         /**
          * Parse detours API to get all detours with parsed KML
          */
         $detours_with_kml = $adjustment_helper->getDetoursWithKML($request_protocol, $request_domain);
         if (count($detours_with_kml) >= 1) {
             $alerts = collect([]);
-            $adjustment_action = array();
+            $adjustment_action = [];
             $is_recorded = false;
             /**
              * Call the alerts API to get detour reason
@@ -69,7 +68,7 @@ class SwiftlyAdjustmentController extends Controller
                  * Check if detour has a DB entry
                  */
                 $is_recorded = $adjustment_helper->checkDetourDBRecords($detour_id);
-                if(!$is_recorded) {
+                if (! $is_recorded) {
                     /**
                      * Populate an array of detours that require an adjustment call
                      */
@@ -85,7 +84,7 @@ class SwiftlyAdjustmentController extends Controller
                     $insert = false;
                     /**
                      * If there are two or more routes associated with a detour_id then get the first route
-                     * as detour details are same for all routes. 
+                     * as detour details are same for all routes.
                      */
                     $route_id = array_key_first($detours_with_kml[$detour_id]);
                     /**
@@ -93,7 +92,7 @@ class SwiftlyAdjustmentController extends Controller
                      */
                     $detour_shape = $adjustment_helper->generateShape($route_id, $detour_id);
                     if (count($detour_shape) >= 1) {
-                        $payload = array();
+                        $payload = [];
                         /**
                          * Get the payload for the API
                          */
@@ -105,52 +104,53 @@ class SwiftlyAdjustmentController extends Controller
                              */
                             $api_response = $adjustment_helper->createAdjustmentAPICall($payload, $swiftly_api_header);
                             if ($api_response) {
-                                $response = array('error' => false, 'reason' => 'Created adjustment for detour '.$detour_id);
+                                $response = ['error' => false, 'reason' => 'Created adjustment for detour '.$detour_id];
                                 /**
                                  * Insert the payload and API response to the database.
                                  */
                                 $insert = $adjustment_helper->insertRecord($detour_id, $payload, $api_response);
                                 if ($insert) {
                                     Log::info('Created adjustment for detour '.$detour_id.' and successfully inserted to DB');
-                                    $response = array('error' => false, 'reason' => 'Created adjustment for detour '.$detour_id.' and successfully inserted to DB');
+                                    $response = ['error' => false, 'reason' => 'Created adjustment for detour '.$detour_id.' and successfully inserted to DB'];
                                 } else {
                                     Log::info('Created adjustment for detour '.$detour_id.' and but there was an issue inserting to DB');
-                                    $response = array('error' => true, 'reason' => 'Created adjustment for detour '.$detour_id.' but there was an issue inserting to DB');
+                                    $response = ['error' => true, 'reason' => 'Created adjustment for detour '.$detour_id.' but there was an issue inserting to DB'];
                                 }
                             }
                         } else {
                             Log::info('No payload generated for '.$detour_id);
-                            $response = array('error' => true, 'reason' => 'No payload generated for '.$detour_id);
-                            $insert = $adjustment_helper->insertRecord($detour_id, array('error' => true, 'reason' => 'No payload'), '');
+                            $response = ['error' => true, 'reason' => 'No payload generated for '.$detour_id];
+                            $insert = $adjustment_helper->insertRecord($detour_id, ['error' => true, 'reason' => 'No payload'], '');
                             if ($insert) {
                                 Log::info('Successfully inserted into DB. Detour '.$detour_id);
-                                $response = array('error' => true, 'reason' => 'No payload generated for '.$detour_id.' but successfully inserted into DB');
+                                $response = ['error' => true, 'reason' => 'No payload generated for '.$detour_id.' but successfully inserted into DB'];
                             } else {
                                 Log::info('Issue inserting into DB. Detour '.$detour_id);
-                                $response = array('error' => true, 'reason' => 'No payload generated for '.$detour_id.' and issue inserting into DB');
+                                $response = ['error' => true, 'reason' => 'No payload generated for '.$detour_id.' and issue inserting into DB'];
                             }
                         }
                     } else {
                         Log::info('No shape file generated for '.$detour_id);
-                        $response = array('error' => true, 'reason' => 'No shape file generated for '.$detour_id);
-                        $insert = $adjustment_helper->insertRecord($detour_id, array('error' => true, 'reason' => 'No shape'), '');
+                        $response = ['error' => true, 'reason' => 'No shape file generated for '.$detour_id];
+                        $insert = $adjustment_helper->insertRecord($detour_id, ['error' => true, 'reason' => 'No shape'], '');
                         if ($insert) {
                             Log::info('Successfully inserted into DB. Detour '.$detour_id);
-                            $response = array('error' => true, 'reason' => 'No shape file generated for '.$detour_id.' but successfully inserted into DB');
+                            $response = ['error' => true, 'reason' => 'No shape file generated for '.$detour_id.' but successfully inserted into DB'];
                         } else {
                             Log::info('Issue inserting into DB. Detour '.$detour_id);
-                            $response = array('error' => true, 'reason' => 'No shape file generated for '.$detour_id.' and issue inserting into DB');
+                            $response = ['error' => true, 'reason' => 'No shape file generated for '.$detour_id.' and issue inserting into DB'];
                         }
                     }
                 } else {
-                    $response = array('error' => true, 'reason' => 'No detour details');
+                    $response = ['error' => true, 'reason' => 'No detour details'];
                 }
             } else {
-                $response = array('error' => true, 'reason' => 'No new detours to call');
-            } 
+                $response = ['error' => true, 'reason' => 'No new detours to call'];
+            }
         } else {
-            $response = array('error' => true, 'reason' => 'No detours with parsed kml');
+            $response = ['error' => true, 'reason' => 'No detours with parsed kml'];
         }
+
         return response()->json($response);
     }
 }

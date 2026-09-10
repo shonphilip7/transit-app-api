@@ -2,21 +2,21 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 use App\Helpers\TrainViewHelper;
 use Illuminate\Support\Collection;
+use Tests\TestCase;
 
 class TrainViewHelperTest extends TestCase
 {
     private $trainview_helper;
+
     protected function setUp(): void
     {
         parent::setUp();
-        $this->trainview_helper = new TrainViewHelper();
+        $this->trainview_helper = new TrainViewHelper;
     }
-    public function test_getSchedules_success(): void
+
+    public function test_get_schedules_success(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
         $this->assertIsArray($schedules_data, 'Schedule data not an array');
@@ -25,17 +25,19 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals('KVTR', $schedules_data[0]['stop_id'], 'Stop id should be KVTR');
         $this->assertEquals('Kadavanthra', $schedules_data[0]['stop_name'], 'Stop id should be Kadavanthra');
     }
-    public function test_getSchedules_fail(): void
+
+    public function test_get_schedules_fail(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('test', 'abc');
         $this->assertNull($schedules_data, 'The value should be null');
     }
-    public function test_getTrips_success(): void
+
+    public function test_get_trips_success(): void
     {
         $data = collect();
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
         $release = $schedules_data[0]['release_name'];
-        $service = array($schedules_data[0]['service_id']);
+        $service = [$schedules_data[0]['service_id']];
         $trips = $this->trainview_helper->getTrips($schedules_data, $release, $service);
         $this->assertInstanceOf(Collection::class, $trips);
         $this->assertGreaterThanOrEqual(1, $trips->count(), 'trips is empty');
@@ -49,18 +51,20 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals('KVTR', $data[0]['stop_id'], 'Stop id should be KVTR');
         $this->assertEquals('Kadavanthra', $data[0]['stop_name'], 'Stop id should be Kadavanthra');
     }
-    public function test_getTrips_fail(): void
+
+    public function test_get_trips_fail(): void
     {
-        $trips = $this->trainview_helper->getTrips('x', 'y', array('z'));
+        $trips = $this->trainview_helper->getTrips('x', 'y', ['z']);
         $this->assertEquals(0, $trips->count());
-    } 
-    public function test_getNextFourTrips(): void
+    }
+
+    public function test_get_next_four_trips(): void
     {
         $data = collect();
         $spliced_trips = collect();
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
         $release = $schedules_data[0]['release_name'];
-        $service = array($schedules_data[0]['service_id']);
+        $service = [$schedules_data[0]['service_id']];
         $trips = $this->trainview_helper->getTrips($schedules_data, $release, $service);
         if ($trips->has('1')) {
             $data = $trips['1'];
@@ -74,22 +78,24 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals('KVTR', $data[0]['stop_id'], 'Stop id should be KVTR');
         $this->assertEquals('Kadavanthra', $data[0]['stop_name'], 'Stop id should be Kadavanthra');
     }
-    public function test_buildResponse(): void
+
+    public function test_build_response(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
         $release = $schedules_data[0]['release_name'];
-        $service = array($schedules_data[0]['service_id']);
+        $service = [$schedules_data[0]['service_id']];
         $trips = $this->trainview_helper->getTrips($schedules_data, $release, $service);
         $response = $this->trainview_helper->buildResponse($trips);
         $this->assertIsArray($response, 'Response data not an array');
         $this->assertNotEmpty($response, 'Response data is empty for KVTR');
-        $this->assertEquals(array_keys($response), array('Inbound', 'Outbound'), 'Response should have both inbound & outbound');
+        $this->assertEquals(array_keys($response), ['Inbound', 'Outbound'], 'Response should have both inbound & outbound');
         $this->assertLessThanOrEqual(4, count($response['Inbound']), 'Maximum allowed inbound value is 4');
         $this->assertLessThanOrEqual(4, count($response['Outbound']), 'Maximum allowed outbound value is 4');
         $this->assertEquals('R1', $response['Inbound'][0]['route_id'], 'Route id should be R1');
         $this->assertEquals('KVTR', $response['Inbound'][0]['stop_id'], 'Stop id should be KVTR');
         $this->assertEquals('Kadavanthra', $response['Inbound'][0]['stop_name'], 'Stop id should be Kadavanthra');
     }
+
     protected function tearDown(): void
     {
         // Clean up resources if necessary (though often optional in PHP)
