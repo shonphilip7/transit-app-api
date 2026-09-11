@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KmlController;
 use App\Http\Controllers\SwiftlyAdjustmentController;
 use App\Http\Controllers\TrainViewController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
