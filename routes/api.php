@@ -7,32 +7,21 @@ use App\Http\Controllers\TrainViewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 /*
-* Swiftly Adjustments
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
 */
 Route::get('/adjustments-data', [SwiftlyAdjustmentController::class, 'crudAdjustments']);
-/**
- * TrainView API, ex: http://localhost/api/trainview/R1/VYTA
- */
 Route::get('/trainview/{rr_route}/{stop_id}', [TrainViewController::class, 'index']);
-/**
- * API for listing all transit routes, ex: http://localhost/api/routes/
- */
 Route::get('/routes', [TrainViewController::class, 'getRoutes']);
-/**
- * API for listing all stops of a given line
- */
 Route::get('/{line}/stops', [TrainViewController::class, 'getStops']);
-/**
- * KML API ex: http://localhost/api/kml/R1/1
- */
 Route::get('/kml/{route_id}/{direction}', [KmlController::class, 'index']);
-/**
- * APIs for authentication
- */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

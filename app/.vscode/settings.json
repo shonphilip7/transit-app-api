@@ -1,0 +1,11 @@
+{
+    // 1. Turn off the legacy sniffer extensions for this project
+    "phpcs.enable": false,
+    "phpsab.enable": false,
+    "phpSniffer.enable": false,
+    // 2. Use modern Laravel Pint as the ONLY tool for formatting on save
+    "[php]": {
+        "editor.defaultFormatter": "open-southeners.laravel-pint",
+        "editor.formatOnSave": true
+    }
+}
