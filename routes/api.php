@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 | PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
+
 Route::get('/adjustments-data', [SwiftlyAdjustmentController::class, 'crudAdjustments']);
 Route::get('/trainview/{rr_route}/{stop_id}', [TrainViewController::class, 'index']);
 Route::get('/routes', [TrainViewController::class, 'getRoutes']);
