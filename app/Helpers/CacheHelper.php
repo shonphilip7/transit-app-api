@@ -5,11 +5,11 @@ namespace App\Helpers;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
-/**
- * A custom helper class for stuff related to Redis cache like get, set
- */
 class CacheHelper
 {
+    /** @var \Illuminate\Redis\Connections\Connection
+     * Declaring the exact type clears the Intelephense warning!
+     */
     private $redis = null;
 
     public function __construct()
@@ -17,12 +17,7 @@ class CacheHelper
         $this->redis = Redis::connection();
     }
 
-    /**
-     * Pinging the redis connection
-     *
-     * @return bool $response True if there is a connection else false
-     */
-    public function connect()
+    public function connect(): bool
     {
         $response = false;
         try {
@@ -33,26 +28,18 @@ class CacheHelper
                     $response = false;
                 }
             } else {
-                Log::error('Error message: Unable to set redis indtance');
+                Log::error('Error message: Unable to set redis instance');
                 $response = false;
             }
         } catch (\Exception $e) {
-            Log::error('Error message: '.$e->getMessage());
+            Log::error('Error in redis connection. Error message: '.$e->getMessage());
             $response = false;
         }
 
         return $response;
     }
 
-    /**
-     * Set key-value to Redis
-     *
-     * @param  string  $key  Redis key
-     * @param  string  $data  Redis value
-     * @param  int  $expiry  Redis data expiry in seconds
-     * @return bool $response True if successfully able to set key-value in Redis
-     */
-    public function set($key, $data, $expiry)
+    public function set(string $key, string $data, int $expiry)
     {
         $response = false;
         try {
@@ -63,26 +50,20 @@ class CacheHelper
                 Log::error('Error message: Unable to set redis data');
             }
         } catch (\Exception $e) {
-            Log::error('Error message: '.$e->getMessage());
+            Log::error('Error in redis set operation: '.$e->getMessage());
             $response = false;
         }
 
         return $response;
     }
 
-    /**
-     * Get value from Redis based on key
-     *
-     * @param string Redis key
-     * @return mixed The actual data from redis else false
-     */
-    public function get($key)
+    public function get(string $key)
     {
         $response = false;
         try {
             $response = $this->redis->get($key);
         } catch (\Exception $e) {
-            Log::error('Error message: '.$e->getMessage());
+            Log::error('Error in redis get operation: '.$e->getMessage());
             $response = false;
         }
 

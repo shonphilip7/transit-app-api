@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -10,21 +11,13 @@ use Illuminate\Support\Facades\Storage;
  */
 class CommonHelper
 {
-    private $cache_helper = false;
+    private ?CacheHelper $cache_helper = null;
 
     public function __construct()
     {
         $this->cache_helper = new CacheHelper;
     }
 
-    /**
-     * Call the calendar API
-     *
-     * The function checks if the data is in redis else it calls the API and
-     * stores data in redis for faster response time
-     *
-     * @return array calendar_data The calendar data from the static JSON files
-     */
     public function getCalendarData()
     {
         $calendar_data = [];
@@ -39,7 +32,7 @@ class CommonHelper
             if ($calendarJsonData !== null) {
                 $calendar_data = json_decode($calendarJsonData, true);
             } else {
-                $calendar_data = Storage::disk('public')->json('calendar.json');
+                $calendar_data = json_decode(Storage::disk('public')->get('calendar.json'), true);
                 if ($this->cache_helper->connect()) {
                     $this->cache_helper->set('calendar_data', json_encode($calendar_data), 86400);
                 }
@@ -90,18 +83,13 @@ class CommonHelper
     }
 
     /**
-     * This function was added due to the limitation in the KMRL open data.
-     * (Last entry provided in GTFS is for date 2025-12-31).If the current
-     * date is greater than 20251231 which it would be since we are in 2026
-     * at the time of writing this code then select a date from the last week
-     * of 2025 based on the current day name(Mon, Tue, Wed ...).
-     *
-     * @param  string  $given_date  This would be the current date in Ymd format
-     * @param  array  $calendar  The data from the calendar json file
-     * @param  string  $current_day  Current date in Illuminate\Support\Carbon format
-     * @return string $result Adjusted date in Ymd format
+     * This function was added due to the limitation in the KMRL open data. The last entry provided
+     * in the GTFS is 2025-12-31. If the current date is greater than the last entry which it would
+     * be since at the time of writing this code we are in 2026 then get the latest date from 2025
+     * that best matches the current day. Ex: If the current day is Saturday the get the last date
+     * of Saturday in 2025 which would be the 2025-12-27.
      */
-    public function adjustedDate($given_date, $calendar, $current_day)
+    public function adjustedDate(string $given_date, array $calendar, Carbon $current_day): string
     {
         $result = '';
         $calendar_data_last_key = array_key_last(array_keys($calendar));
@@ -110,6 +98,8 @@ class CommonHelper
         $date2 = Carbon::parse($calendar_last_date);
         if ($date1->gt($date2)) {
             $result = $this->getLastDaysOfYear('2025', $current_day->englishDayOfWeek);
+        } else {
+            $result = $given_date;
         }
 
         return $result;

@@ -9,20 +9,16 @@ use Illuminate\Support\Facades\Log;
 
 class TrainViewController extends Controller
 {
-    /**
-     * The function to generate the trainview schedule API data
-     *
-     * @param  string  $stop_id  Stop ID (ex:VYTA, THPT...)
-     * @return array $trainview Inbound/outbound timings for the stop
-     */
-    public function index($rr_route, $stop_id)
+    public function index(string $rr_route, string $stop_id): array
     {
         $trainview = [];
         try {
             $trainview_helper = new TrainViewHelper;
             $common_helper = new CommonHelper;
             /**
-             * Get calendar data from redis or the JSON file
+             * Get calendar data from redis or the JSON file. The calendar data
+             * has the release name and service ids for the current day whic is required
+             * for getting arrival times.
              */
             $calendar_data = $common_helper->getCalendarData();
             if (count($calendar_data) >= 1) {
@@ -38,16 +34,6 @@ class TrainViewController extends Controller
                 $release = $calendar_data[$formattedDate]['release_name'];
                 $services = $calendar_data[$formattedDate]['service_id'];
                 if (($release !== null) && (count($services) > 0)) {
-                    $inbound_trips = collect();
-                    $outbound_trips = collect();
-                    $trainview_api_response = collect();
-                    $trainview_api_data = collect();
-                    $next_inbound_trips = collect();
-                    $next_outbound_trips = collect();
-                    $service_alerts = collect();
-                    /**
-                     * Get schedules for the given stop.
-                     */
                     $rr_schedule = $trainview_helper->getSchedules($rr_route, $stop_id);
                     $rr_trips = $trainview_helper->getTrips($rr_schedule, $release, $services);
                     $rr_response = $trainview_helper->buildResponse($rr_trips);
@@ -57,7 +43,7 @@ class TrainViewController extends Controller
                     Log::error('Error message: Unable to get release or service');
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error message: Caught exception '.$e->getMessage());
             $trainview = [];
         }
@@ -76,7 +62,7 @@ class TrainViewController extends Controller
         try {
             $trainview_helper = new TrainViewHelper;
             $routes = $trainview_helper->getRoutes();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error message getting routes in API: Caught exception '.$e->getMessage());
             $routes = [];
         }
@@ -96,7 +82,7 @@ class TrainViewController extends Controller
         try {
             $trainview_helper = new TrainViewHelper;
             $stops = $trainview_helper->getStops($line);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error message getting stops in API: Caught exception '.$e->getMessage());
             $stops = [];
         }
