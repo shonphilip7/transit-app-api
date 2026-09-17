@@ -6,9 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * Common methods used in more than one controllers
- */
 class CommonHelper
 {
     private ?CacheHelper $cache_helper = null;
@@ -23,9 +20,7 @@ class CommonHelper
         $calendar_data = [];
         $calendarJsonData = null;
         try {
-            /**
-             * Try the redis for an entry else get it from the actual file
-             */
+            // Try the redis for an entry else get it from the actual file
             if ($this->cache_helper->connect()) {
                 $calendarJsonData = $this->cache_helper->get('calendar_data');
             }
@@ -68,10 +63,10 @@ class CommonHelper
             'Friday' => CARBON::FRIDAY,
             'Saturday' => CARBON::SATURDAY,
         ];
-        /**
-         * Create a Carbon instance for the first day of the year following
-         * the target year. For example, for the year 2025, this creates an
-         * instance for 2026-01-01.
+        /*
+          Create a Carbon instance for the first day of the year following
+          the target year. For example, for the year 2025, this creates an
+          instance for 2026-01-01.
          */
         $firstDayOfNextYear = Carbon::create($year + 1, 1, 1, 0, 0, 0);
         // Subtract one second to get the very last moment of the target year (2025-12-31 23:59:59)

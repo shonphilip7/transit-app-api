@@ -3,35 +3,23 @@
 namespace App\Helpers;
 
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * A custom helper class for stuff related to the TrainView API
- */
 class TrainViewHelper
 {
-    private $cache_helper = false;
+    private ?CacheHelper $cache_helper = null;
 
     public function __construct()
     {
         $this->cache_helper = new CacheHelper;
     }
 
-    /**
-     * Call the schedules API
-     *
-     * The function checks if the data is in redis else it calls the API and stores data in redis
-     * for faster response time
-     *
-     * @param  string  $line  The transit route
-     * @param  string  $stop_id  The stop id
-     * @return string $schedules_data Result from the schedules API
-     */
-    public function getSchedules($line, $stop_id)
+    public function getSchedules(string $line, string $stop_id): array
     {
-        $schedules_data = null;
+        $schedules_data = [];
         $scheduleJsonData = null;
         try {
             if ($this->cache_helper->connect()) {
@@ -40,32 +28,22 @@ class TrainViewHelper
             if ($scheduleJsonData !== null) {
                 $schedules_data = json_decode($scheduleJsonData, true);
             } else {
-                $schedules_data = Storage::disk('public')->json('schedules/stops/'.$line.'/'.$stop_id.'/schedule.json');
+                $schedules_data = json_decode(Storage::disk('public')->get('schedules/stops/'.$line.'/'.$stop_id.'/schedule.json'), true);
                 if ($this->cache_helper->connect()) {
                     $this->cache_helper->set($line.'_'.$stop_id.'_schedules', json_encode($schedules_data), 86400);
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error message: '.$e->getMessage());
-            $schedules_data = null;
+            Log::error('Error message: Issue with getting schedule.'.$e->getMessage());
+            $schedules_data = [];
         }
 
         return $schedules_data;
     }
 
-    /**
-     * Group schedule based on direction
-     *
-     * Filter the schedule trips based on release name and service ids from
-     * the calendar API.
-     *
-     * @param  string  $schedule  Train line schedule
-     * @param  string  $release  Release name from the calendar API
-     * @param  string  $services  Service ids from the calendar API
-     * @return object $trips Scheduled trips grouped by direction
-     */
-    public function getTrips($schedule, $release, $services)
+    public function getTrips(array $schedule, string $release, array $services): Collection
     {
+        // Convert array to collection for simplicity
         $trips = collect();
         $filtered_by_release = collect($schedule)->where('release_name', $release);
         if ($filtered_by_release->isNotEmpty()) {
@@ -128,16 +106,7 @@ class TrainViewHelper
         return $result;
     }
 
-    /**
-     * Splice trip results
-     *
-     * Filter out trips that have already passed and get the top four results in
-     * ascending order
-     *
-     * @param  object  $trips  Scheduled trips
-     * @return $object $filtered_by_time Upcoming four trips
-     */
-    public function getNextFourTrips($trips)
+    public function getNextFourTrips(Collection $trips): Collection
     {
         $current_time = Carbon::now('Asia/Kolkata');
         $filtered_by_time = $trips->filter(function ($items) use ($current_time) {
@@ -150,21 +119,15 @@ class TrainViewHelper
         return $filtered_by_time->sortBy('eta')->take(4);
     }
 
-    /**
-     * The trips are spliced to get the next four results.
-     *
-     * @param  object  $trip  Scheduled trips
-     * @return array $response An array of trips grouped by inbound/outbound
-     */
-    public function buildResponse($trip)
+    public function buildResponse(Collection $trip): array
     {
         $response = [];
+        $next_inbound_trips = collect();
+        $next_outbound_trips = collect();
         if ($trip->has(1)) {
-            // $inbound_trips = $this->addTrainViewData($trip[1], $api_data);
             $inbound_trips = $trip[1];
         }
         if ($trip->has(0)) {
-            // $outbound_trips = $this->addTrainViewData($trip[0], $api_data);
             $outbound_trips = $trip[0];
         }
         if ($inbound_trips->count() >= 1) {

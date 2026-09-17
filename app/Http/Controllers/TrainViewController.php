@@ -44,7 +44,7 @@ class TrainViewController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error message: Caught exception '.$e->getMessage());
+            Log::error('Error message: Caught TrainView API exception '.$e->getMessage());
             $trainview = [];
         }
 
