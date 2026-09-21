@@ -52,11 +52,10 @@ class TrainViewController extends Controller
     }
 
     /**
-     * API for getting all routes of the transit agency
-     *
-     * @return array $routes Stores all distinct routes of the transit agency
+     * Do not confuse with getRoutes from the TrainViewHelper class.
+     * This class is for generating the routes API
      */
-    public function getRoutes()
+    public function getRoutes(): array
     {
         $routes = [];
         try {

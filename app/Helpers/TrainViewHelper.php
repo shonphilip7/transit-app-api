@@ -172,13 +172,7 @@ class TrainViewHelper
         return $service_message;
     }
 
-    /**
-     * Checks to see if there is an entry in cache for routes else
-     * gets it from the raw JSON file stored in the public storage directory.
-     *
-     * @return array $routes Stores all routes of the transit agency
-     */
-    public function getRoutes()
+    public function getRoutes(): array
     {
         $routes = [];
         $routesJsonData = null;
@@ -189,7 +183,7 @@ class TrainViewHelper
             if ($routesJsonData !== null) {
                 $routes = json_decode($routesJsonData, true);
             } else {
-                $routes = Storage::disk('public')->json('routes.json');
+                $routes = json_decode(Storage::disk('public')->get('routes.json'), true);
                 if ($this->cache_helper->connect()) {
                     $this->cache_helper->set('routes', json_encode($routes), 86400);
                 }
