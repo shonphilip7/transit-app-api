@@ -53,7 +53,7 @@ class TrainViewController extends Controller
 
     /**
      * Do not confuse with getRoutes from the TrainViewHelper class.
-     * This class is for generating the routes API
+     * This function is for generating the routes API
      */
     public function getRoutes(): array
     {
@@ -70,12 +70,10 @@ class TrainViewController extends Controller
     }
 
     /**
-     * API for getting all stops of the given route
-     *
-     * @param  string  $line  Transit agency route
-     * @return array $stops Stores all stops of the given route
+     * Do not confuse with getStops from the TrainViewHelper class.
+     * This function is for generating the stops API
      */
-    public function getStops($line)
+    public function getStops(string $line): array
     {
         $stops = [];
         try {

@@ -196,14 +196,7 @@ class TrainViewHelper
         return $routes;
     }
 
-    /**
-     * Checks to see if there is an entry in cache for stops for the given line
-     * else gets it from the raw JSON file stored in the public storage directory.
-     *
-     * @param  string  $line  Transit route
-     * @return array $stops Stores all stops of the given route
-     */
-    public function getStops($line)
+    public function getStops(string $line): array
     {
         $stops = [];
         $stopJsonData = null;
@@ -214,7 +207,7 @@ class TrainViewHelper
             if ($stopJsonData !== null) {
                 $stops = json_decode($stopJsonData, true);
             } else {
-                $stops = Storage::disk('public')->json('stops/'.$line.'/stops.json');
+                $stops = json_decode(Storage::disk('public')->get('stops/'.$line.'/stops.json'), true);
                 if ($this->cache_helper->connect()) {
                     $this->cache_helper->set($line.'_stops', json_encode($stops), 86400);
                 }
@@ -224,8 +217,13 @@ class TrainViewHelper
             $stopJsonData = null;
         }
         if (count($stops) >= 1) {
+            /*
+            Convert array to collection for easier filtering and sorting. Filter the values based on direction
+            else there will be duplicates as stops are same in either direction. Finally, sort by stop_sequence
+            for better asthetic.
+            */
             $collection = collect($stops);
-            $stops = $collection->unique('stop_id')->toArray();
+            $stops = $collection->where('direction_id', '0')->sortBy('stop_sequence', SORT_NUMERIC)->toArray();
         }
 
         return $stops;
