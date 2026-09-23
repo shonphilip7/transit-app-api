@@ -15,7 +15,7 @@ class CommonHelper
         $this->cache_helper = new CacheHelper;
     }
 
-    public function getCalendarData()
+    public function getCalendarData(): array
     {
         $calendar_data = [];
         $calendarJsonData = null;

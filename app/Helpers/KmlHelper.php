@@ -16,7 +16,7 @@ class KmlHelper
      * @param  string  $route  The transit agency route
      * @return string $file_contents The KML contents
      */
-    public function getFile($release_version, $route)
+    public function getFile(string $release_version, string $route): string
     {
         $file_contents = '';
         $file_contents = Storage::disk('public')->get('KML/'.$release_version.'/'.$route.'.kml');
@@ -28,16 +28,13 @@ class KmlHelper
      * Filter the contents based on the param passed. A direction param selects the placemarks
      * with the given direction. A coords param parses the contents to get value of the co-
      * ordinates node.
-     *
-     * @param  bool  $direction  Flag to filter by direction
-     * @param  bool  $coords  Flag to extract coorinates
-     * @param  object  $xpath  An instance of the DOMXPath class
-     * @return object $filtered_placemarks Filter contents based on the flags passed
      */
-    public function filter($direction, $coords, $xpath)
+    public function filter(string|bool $direction, bool $coords, \DOMXPath $xpath): \DOMNodeList|array
     {
+        $filtered_placemarks = [];
         $remove_direction = false;
         if ($direction !== false) {
+            //If the direction is set to '1' in the API call then remove all instances of direction '0' and vice versa.
             if ($direction == '1') {
                 $remove_direction = '0';
             }
@@ -55,15 +52,25 @@ class KmlHelper
         return $filtered_placemarks;
     }
 
-    /**
-     * Remove placemarks from the KML content that do not meet the requirement.
-     *
-     * @param  object  $filteredPlacemarks  Child elements that need to be deleted from the KML file
-     */
-    public function removeUnwantedElements($filteredPlacemarks)
+    // Remove placemarks from the KML content that do not meet the requirement.
+    public function removeUnwantedElements(\DOMNodeList $filteredPlacemarks): void
     {
-        foreach ($filteredPlacemarks as $placemark) {
-            $placemark->parentNode->removeChild($placemark);
+        // Convert the live node list into a static array to prevent index tracking bugs.
+        /*
+        What is this bug?
+        Imagine you have 4 coordinate tags in a row: [Tag0, Tag1, Tag2, Tag3].
+        1) Loop Loop 1: PHP looks at index 0 (Tag0) and deletes it.
+        2) The Shift: Because the list is live, the remaining items instantly shift down to fill the gap. 
+        Your list is now [Tag1, Tag2, Tag3].
+        3) Loop Loop 2: PHP advances its internal counter to index 1. But index 1 is now Tag2! Tag1 was 
+        skipped entirely.
+        This function dumps XML into a static PHP array
+        */
+        $nodesToDelete = iterator_to_array($filteredPlacemarks);
+        foreach ($nodesToDelete as $placemark) {
+            if ($placemark->parentNode) {
+                $placemark->parentNode->removeChild($placemark);
+            }
         }
     }
 
