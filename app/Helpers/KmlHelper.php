@@ -34,7 +34,7 @@ class KmlHelper
         $filtered_placemarks = [];
         $remove_direction = false;
         if ($direction !== false) {
-            //If the direction is set to '1' in the API call then remove all instances of direction '0' and vice versa.
+            // If the direction is set to '1' in the API call then remove all instances of direction '0' and vice versa.
             if ($direction == '1') {
                 $remove_direction = '0';
             }
@@ -60,13 +60,14 @@ class KmlHelper
         What is this bug?
         Imagine you have 4 coordinate tags in a row: [Tag0, Tag1, Tag2, Tag3].
         1) Loop Loop 1: PHP looks at index 0 (Tag0) and deletes it.
-        2) The Shift: Because the list is live, the remaining items instantly shift down to fill the gap. 
+        2) The Shift: Because the list is live, the remaining items instantly shift down to fill the gap.
         Your list is now [Tag1, Tag2, Tag3].
-        3) Loop Loop 2: PHP advances its internal counter to index 1. But index 1 is now Tag2! Tag1 was 
+        3) Loop Loop 2: PHP advances its internal counter to index 1. But index 1 is now Tag2! Tag1 was
         skipped entirely.
         This function dumps XML into a static PHP array
         */
         $nodesToDelete = iterator_to_array($filteredPlacemarks);
+        /** @var object $placemark */
         foreach ($nodesToDelete as $placemark) {
             if ($placemark->parentNode) {
                 $placemark->parentNode->removeChild($placemark);
@@ -76,11 +77,8 @@ class KmlHelper
 
     /**
      * Exctract coordinates from the coordinates node of the KML file.
-     *
-     * @param  object  $node  The coordinate node extracted from the KML file
-     * @return array $list A sample structure: [["lat": "9.950794","lng": "76.351869","alt": "0.0"]]
      */
-    public function getCoordinates($nodes)
+    public function getCoordinates(\DOMNodeList $nodes): array
     {
         $list = [];
         // Coordinates are space-separated points, and each point is comma-separated (longitude, latitude, altitude

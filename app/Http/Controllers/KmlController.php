@@ -13,6 +13,7 @@ class KmlController extends Controller
     {
         try {
             $calendar_data = [];
+            $coordinates_list = [];
             $common_helper = new CommonHelper;
             $calendar_data = $common_helper->getCalendarData();
             if (count($calendar_data) >= 1) {
@@ -26,7 +27,7 @@ class KmlController extends Controller
                 // Get KML file contents
                 $kml_content = $kml_helper->getFile($release, $route_id);
                 /*
-                Load raw KML into a DOMDocument as PHP has no native understanding of XML structure 
+                Load raw KML into a DOMDocument as PHP has no native understanding of XML structure
                 when it is inside a standard text string.
                 */
                 $dom = new \DOMDocument;
@@ -35,7 +36,7 @@ class KmlController extends Controller
                 $dom->loadXML($kml_content);
                 /*
                 Create the XPath evaluator bound to the DOM. XPath is like a database query for XML
-                or HTML documents. 
+                or HTML documents.
                 */
                 $xpath = new \DOMXPath($dom);
                 // Without it, the XPath engine is completely blind to the tags and will return zero results.
@@ -45,16 +46,16 @@ class KmlController extends Controller
                 if ($filtered_by_direction_query instanceof \DOMNodeList) {
                     $kml_helper->removeUnwantedElements($filtered_by_direction_query);
                 }
-                $filtered_kml = $dom->saveXML();
-                /**
-                 * Extract coordinates from the KML file
-                 */
+                // $filtered_kml = $dom->saveXML(); This line is just for debugging
+                // Extract coordinates from the KML file
                 $coordinateNodes = $kml_helper->filter(false, true, $xpath);
-                $coordinates_list = $kml_helper->getCoordinates($coordinateNodes);
+                if ($coordinateNodes->length !== 0) {
+                    $coordinates_list = $kml_helper->getCoordinates($coordinateNodes);
+                }
 
                 return $coordinates_list;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Error message: Caught exception '.$e->getMessage());
         }
     }
