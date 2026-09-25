@@ -41,18 +41,10 @@ class CommonHelper
     }
 
     /**
-     * This function was added due to the limitation in the KMRL open data.
-     * (Last entry provided in GTFS is for date 2025-12-31). If the current
-     * date is greater than 20251231 which it would be since we are in 2026
-     * at the time of writing this code then select a date from the last week
-     * of 2025 based on the current day name(Mon, Tue, Wed ...). So if today
-     * is Wednesday then get the date for the last Wednesday of the year 2025.
-     *
-     * @param  string  $year  The year to search the dates
-     * @param  string  $day_of_week  Sunday, Monday, Tuesday.....
-     * @return string Date in Ymd format
+     * This can be better explained by an example. If the current day is Saturday the get the last date of Saturday
+     * in 2025 which would be the 2025-12-27.
      */
-    public function getLastDaysOfYear($year, $day_of_week)
+    public function getLastDaysOfYear(string $year, string $day_of_week): string
     {
         $calendar_week = [
             'Sunday' => Carbon::SUNDAY,
@@ -81,8 +73,7 @@ class CommonHelper
      * This function was added due to the limitation in the KMRL open data. The last entry provided
      * in the GTFS is 2025-12-31. If the current date is greater than the last entry which it would
      * be since at the time of writing this code we are in 2026 then get the latest date from 2025
-     * that best matches the current day. Ex: If the current day is Saturday the get the last date
-     * of Saturday in 2025 which would be the 2025-12-27.
+     * that best matches the current day.
      */
     public function adjustedDate(string $given_date, array $calendar, Carbon $current_day): string
     {
