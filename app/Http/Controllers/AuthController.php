@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request): array
     {
         $fields = $request->validate([
             'name' => 'required|max:255',
@@ -24,7 +24,7 @@ class AuthController extends Controller
         ];
     }
 
-    public function login(Request $request)
+    public function login(Request $request): array
     {
         $request->validate([
             'email' => 'required|email|exists:users',
@@ -49,7 +49,7 @@ class AuthController extends Controller
         ];
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): array
     {
         // Revoke the token that was used to authenticate the current request
         $request->user()->tokens()->delete();
