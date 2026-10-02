@@ -4,29 +4,45 @@ namespace Tests\Feature;
 
 use App\Helpers\CommonHelper;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CommonHelperTest extends TestCase
 {
-    private $helper;
+    protected CommonHelper $helper;
 
     protected function setUp(): void
     {
         parent::setUp();
+        Redis::connection()->flushdb();
+        Storage::fake('public');
         $this->helper = new CommonHelper;
     }
 
-    protected function tearDown(): void
+    public function test_get_calendar_data_gets_data_from_redis_first(): void
     {
-        $this->helper = null;
-        parent::tearDown();
+        // Arrange: Seed the hardcoded key using the native Redis facade
+        $cachedData = ['status' => 'cached_in_redis'];
+        Redis::set('calendar_data', json_encode($cachedData));
+        // Act: Run the helper service method
+        $result = $this->helper->getCalendarData();
+        // Assert: It prefers the Redis data
+        $this->assertEquals($cachedData, $result);
     }
 
-    public function test_get_calendar_data(): void
+    public function test_get_calendar_data_falls_back_to_file_when_redis_is_empty(): void
     {
-        $calendar_data = $this->helper->getCalendarData();
-        $this->assertIsArray($calendar_data, 'Calendar data should be in array');
-        $this->assertNotEmpty($calendar_data, 'Calendar data should not be empty');
+        // 1. Arrange: Put a fake file on the virtualized storage disk
+        $mockData = ['status' => 'fresh_from_json'];
+        Storage::disk('public')->put('calendar.json', json_encode($mockData));
+        // 2. Act: Call your helper method
+        $result = $this->helper->getCalendarData();
+        // 3. Assert: Verify the method returned the correct data
+        $this->assertEquals($mockData, $result);
+        // Verify it actually saved to the real test Redis instance
+        $savedRedisData = Redis::get('calendar_data');
+        $this->assertEquals($mockData, json_decode($savedRedisData, true));
     }
 
     public function test_get_last_day_of_year(): void

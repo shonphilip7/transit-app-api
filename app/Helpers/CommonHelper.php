@@ -33,15 +33,15 @@ class CommonHelper
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error message: '.$e->getMessage());
-            $calendar_data = null;
+            Log::error('Error message: cannot get calendar data from cache'.$e->getMessage());
+            $calendar_data = [];
         }
 
         return $calendar_data;
     }
 
     /**
-     * This can be better explained by an example. If the current day is Saturday the get the last date of Saturday
+     * This can be better explained by an example. If the current day is Saturday then get the last date of Saturday
      * in 2025 which would be the 2025-12-27.
      */
     public function getLastDaysOfYear(string $year, string $day_of_week): string

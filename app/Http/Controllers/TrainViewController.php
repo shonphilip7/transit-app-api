@@ -17,7 +17,7 @@ class TrainViewController extends Controller
             $common_helper = new CommonHelper;
             /**
              * Get calendar data from redis or the JSON file. The calendar data
-             * has the release name and service ids for the current day whic is required
+             * has the release name and service ids for the current day which is required
              * for getting arrival times.
              */
             $calendar_data = $common_helper->getCalendarData();
