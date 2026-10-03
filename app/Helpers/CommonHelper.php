@@ -41,8 +41,8 @@ class CommonHelper
     }
 
     /**
-     * This can be better explained by an example. If the current day is Saturday then get the last date of Saturday
-     * in 2025 which would be the 2025-12-27.
+     * This can be better explained by an example. If the day_of_week is Saturday and year is 2025
+     * then get the last date of Saturday in 2025 which would be the 2025-12-27.
      */
     public function getLastDaysOfYear(string $year, string $day_of_week): string
     {
