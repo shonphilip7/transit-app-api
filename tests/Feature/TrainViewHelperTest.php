@@ -4,16 +4,45 @@ namespace Tests\Feature;
 
 use App\Helpers\TrainViewHelper;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TrainViewHelperTest extends TestCase
 {
-    private $trainview_helper;
+    protected TrainViewHelper $trainview_helper;
 
     protected function setUp(): void
     {
         parent::setUp();
+        Redis::connection()->flushdb();
+        Storage::fake('public');
         $this->trainview_helper = new TrainViewHelper;
+    }
+
+    public function test_get_routes_gets_data_from_redis_first(): void
+    {
+        // Arrange: Seed the hardcoded key using the native Redis facade
+        $cachedData = ['status' => 'cached_in_redis'];
+        Redis::set('routes', json_encode($cachedData));
+        // Act: Run the helper service method
+        $result = $this->trainview_helper->getRoutes();
+        // Assert: It prefers the Redis data
+        $this->assertEquals($cachedData, $result);
+    }
+
+    public function test_get_routes_falls_back_to_file_when_redis_is_empty(): void
+    {
+        // Arrange: Put a fake file on the virtualized storage disk
+        $mockData = ['status' => 'fresh_from_json'];
+        Storage::disk('public')->put('routes.json', json_encode($mockData));
+        // Act: Call your helper method
+        $result = $this->trainview_helper->getRoutes();
+        // Assert: Verify the method returned the correct data
+        $this->assertEquals($mockData, $result);
+        // Verify it actually saved to the real test Redis instance
+        $savedRedisData = Redis::get('routes');
+        $this->assertEquals($mockData, json_decode($savedRedisData, true));
     }
 
     public function test_get_schedules_success(): void
@@ -94,12 +123,5 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals('R1', $response['Inbound'][0]['route_id'], 'Route id should be R1');
         $this->assertEquals('KVTR', $response['Inbound'][0]['stop_id'], 'Stop id should be KVTR');
         $this->assertEquals('Kadavanthra', $response['Inbound'][0]['stop_name'], 'Stop id should be Kadavanthra');
-    }
-
-    protected function tearDown(): void
-    {
-        // Clean up resources if necessary (though often optional in PHP)
-        $this->trainview_helper = null;
-        parent::tearDown();
     }
 }
