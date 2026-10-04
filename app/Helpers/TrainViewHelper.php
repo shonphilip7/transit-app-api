@@ -4,7 +4,6 @@ namespace App\Helpers;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,54 +57,6 @@ class TrainViewHelper
         return $trips;
     }
 
-    /**
-     * Add real-time data to active trips
-     *
-     * Parse through trips and check if the trips are active. If so add the real-time
-     * info to it.
-     *
-     * @param  object  $remaining_trips  Scheduled trips
-     * @param  object  $train_view  The TrainView API results
-     * @return object $result Trips with real-time info added to it
-     */
-    public function addTrainViewData($remaining_trips, $train_view)
-    {
-        $result = collect();
-        $status = false;
-        $service = '';
-        $track = '';
-        $remaining_trips->each(function ($item, $key) use ($train_view, $status, $service, $track, $result) {
-            $arrival_time = Carbon::createFromFormat('H:i:s', $item['arrival_time'], 'America/New_York');
-            $eta = $arrival_time;
-            $rr_train = $train_view->where('trainno', $item['block_id']);
-            if ($rr_train->count() >= 1) {
-                $lateness = $rr_train->first()['late'];
-                if ($lateness <= 0 && $lateness < 1) {
-                    $status = 'ON TIME';
-                }
-                if ($lateness >= 1) {
-                    $status = $lateness.' LATE';
-                    $eta = $arrival_time->addMinutes($lateness);
-                }
-                $service = $rr_train->first()['service'];
-                if ($rr_train->first()['nextstop'] == 'Jefferson Station') {
-                    $track = $rr_train->first()['TRACK'];
-                }
-            }
-            $result->put($item['block_id'], [
-                'arrival_time' => $item['arrival_time'],
-                'status' => ($status === false) ? 'SCHEDULED' : $status,
-                'headsign' => $item['trip_headsign'],
-                'service' => $service,
-                'track' => $track,
-                'eta' => $eta->timestamp,
-                'train_no' => $item['block_id'],
-            ]);
-        });
-
-        return $result;
-    }
-
     public function getNextFourTrips(Collection $trips): Collection
     {
         $current_time = Carbon::now('Asia/Kolkata');
@@ -140,36 +91,6 @@ class TrainViewHelper
         $response['Outbound'] = $next_outbound_trips->toArray();
 
         return $response;
-    }
-
-    /**
-     * Call Alerts API
-     *
-     * Get alerts that are applicable to all regional routes
-     *
-     * @param  string  $api_url  Alerts API
-     * @return object $service_message Alert message for regional rail
-     */
-    public function getAlerts($api_url)
-    {
-        $api_data = collect();
-        $rr_routes = ['AIR', 'CHE', 'CHW', 'FOX', 'LAN', 'MED', 'PAO', 'TRE', 'WIL', 'WTR', 'NOR', 'WAR', 'CYN'];
-        $service_message = collect();
-        $api_response = Http::get($api_url);
-        if ($api_response->successful()) {
-            $api_data = $api_response->collect();
-        }
-        if ($api_data->count() >= 1) {
-            $api_data->each(function ($item, $key) use ($rr_routes, $service_message) {
-                if (count(array_diff($rr_routes, $item['routes'])) == 0) {
-                    $clean_string = strip_tags($item['message']);
-                    $clean_string = str_replace('&nbsp;', ' ', $clean_string);
-                    $service_message->put($item['alert_id'], $clean_string);
-                }
-            });
-        }
-
-        return $service_message;
     }
 
     public function getRoutes(): array
