@@ -45,6 +45,65 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals($mockData, json_decode($savedRedisData, true));
     }
 
+    public function test_get_stops_gets_data_from_redis_first(): void
+    {
+        // Arrange: Seed the hardcoded key using the native Redis facade
+        $cachedData = [
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'TNHL',
+                'stop_name' => 'Town Hall',
+                'stop_sequence' => '14',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+            ],
+        ];
+        Redis::set('R1_stops', json_encode($cachedData));
+        // Act: Run the helper service method
+        $result = $this->trainview_helper->getStops('R1');
+        // Assert: It prefers the Redis data
+        $this->assertEquals($cachedData, $result);
+    }
+
+    public function test_get_stops_falls_back_to_file_when_redis_is_empty(): void
+    {
+        // Arrange: Seed the hardcoded key using the native Redis facade
+        $mockData = [
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'TNHL',
+                'stop_name' => 'Town Hall',
+                'stop_sequence' => '14',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+            ],
+        ];
+        Storage::disk('public')->put('stops/R1/stops.json', json_encode($mockData));
+        // Act: Call your helper method
+        $result = $this->trainview_helper->getStops('R1');
+        // Assert: Verify the method returned the correct data
+        $this->assertEquals($mockData, $result);
+        // Verify it actually saved to the real test Redis instance
+        $savedRedisData = Redis::get('R1_stops');
+        $this->assertEquals($mockData, json_decode($savedRedisData, true));
+    }
+
     public function test_get_schedules_success(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
