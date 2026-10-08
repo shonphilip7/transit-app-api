@@ -157,6 +157,20 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals($cachedData, $result);
     }
 
+    public function test_get_schedules_falls_back_to_file_when_redis_is_empty(): void
+    {
+        // Arrange: Put a fake file on the virtualized storage disk
+        $mockData = $this->seedSchedulesData();
+        Storage::disk('public')->put('schedules/stops/R1/ALVA/schedule.json', json_encode($mockData));
+        // Act: Call your helper method
+        $result = $this->trainview_helper->getSchedules('R1', 'ALVA');
+        // Assert: Verify the method returned the correct data
+        $this->assertEquals($mockData, $result);
+        // Verify it actually saved to the real test Redis instance
+        $savedRedisData = Redis::get('R1_ALVA_schedules');
+        $this->assertEquals($mockData, json_decode($savedRedisData, true));
+    }
+
     public function test_get_schedules_success(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
