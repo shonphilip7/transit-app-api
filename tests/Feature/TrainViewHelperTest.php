@@ -75,7 +75,7 @@ class TrainViewHelperTest extends TestCase
 
     public function test_get_stops_falls_back_to_file_when_redis_is_empty(): void
     {
-        // Arrange: Seed the hardcoded key using the native Redis facade
+        // Arrange: Put a fake file on the virtualized storage disk
         $mockData = [
             [
                 'route_id' => 'R1',
@@ -102,6 +102,40 @@ class TrainViewHelperTest extends TestCase
         // Verify it actually saved to the real test Redis instance
         $savedRedisData = Redis::get('R1_stops');
         $this->assertEquals($mockData, json_decode($savedRedisData, true));
+    }
+
+    public function test_get_schedules_gets_data_from_redis_first(): void
+    {
+        // Arrange: Seed the hardcoded key using the native Redis facade
+        $cachedData = [
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_1',
+                'service_id' => 'WK',
+                'arrival_time' => '05:59:30',
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'TNHL',
+                'stop_name' => 'Town Hall',
+                'stop_sequence' => '14',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_1',
+                'service_id' => 'WK',
+                'arrival_time' => '06:14:30',
+            ],
+        ];
+        Redis::set('R1_ALVA_schedules', json_encode($cachedData));
+        // Act: Run the helper service method
+        $result = $this->trainview_helper->getSchedules('R1', 'ALVA');
+        // Assert: It prefers the Redis data
+        $this->assertEquals($cachedData, $result);
     }
 
     public function test_get_schedules_success(): void
