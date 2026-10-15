@@ -171,6 +171,24 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals($mockData, json_decode($savedRedisData, true));
     }
 
+    public function test_get_trips_returns_list_of_trips_grouped_by_direction(): void
+    {
+        // Arrange: Get schedule data from getSchedules and use it to get trips
+        $mockData = $this->seedSchedulesData();
+        Redis::set('R1_ALVA_schedules', json_encode($mockData));
+        $mockSchedule = $this->trainview_helper->getSchedules('R1', 'ALVA');
+        $mockRelease = 'KMRLOpenData';
+        $mockServices = ['WK'];
+        // Act: Call your helper method
+        $result = $this->trainview_helper->getTrips($mockSchedule, $mockRelease, $mockServices);
+        // Assert: Ensure it's not empty collection
+        $this->assertNotEmpty($result);
+        // Assert: Verify the method returned the correct key(direction_id)
+        $this->assertTrue($result->has(0));
+        // Assert: Verify the method returned the correct number of items
+        $this->assertCount(2, $result[0]);
+    }
+
     public function test_get_schedules_success(): void
     {
         $schedules_data = $this->trainview_helper->getSchedules('R1', 'KVTR');
