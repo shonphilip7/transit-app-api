@@ -171,7 +171,7 @@ class TrainViewHelperTest extends TestCase
         $this->assertEquals($mockData, json_decode($savedRedisData, true));
     }
 
-    public function test_get_trips_returns_list_of_trips_grouped_by_direction(): void
+    public function test_get_trips_returns_list_of_trips_in_correct_format(): void
     {
         // Arrange: Get schedule data from getSchedules and use it to get trips
         $mockData = $this->seedSchedulesData();
@@ -181,12 +181,28 @@ class TrainViewHelperTest extends TestCase
         $mockServices = ['WK'];
         // Act: Call your helper method
         $result = $this->trainview_helper->getTrips($mockSchedule, $mockRelease, $mockServices);
-        // Assert: Ensure it's not empty collection
+        // Assert: Ensure it's a collection and not empty
+        $this->assertInstanceOf(\Illuminate\Support\Collection::class, $result);
         $this->assertNotEmpty($result);
         // Assert: Verify the method returned the correct key(direction_id)
         $this->assertTrue($result->has(0));
-        // Assert: Verify the method returned the correct number of items
+        /*
+        Assert: Verify the method returned the correct number of items. The mock data has
+        only two items.
+        */
         $this->assertCount(2, $result[0]);
+        // Assert: Verify the method returns the result in the proper format
+        $firstItem = $result->first();
+        // First item has nested arrays so only need to check one of the key
+        $this->assertIsArray($firstItem[0]);
+        $this->assertArrayHasKey('route_id', $firstItem[0]);
+        $this->assertArrayHasKey('stop_id', $firstItem[0]);
+        $this->assertArrayHasKey('stop_name', $firstItem[0]);
+        $this->assertArrayHasKey('release_name', $firstItem[0]);
+        $this->assertArrayHasKey('direction_id', $firstItem[0]);
+        $this->assertArrayHasKey('trip_id', $firstItem[0]);
+        $this->assertArrayHasKey('service_id', $firstItem[0]);
+        $this->assertArrayHasKey('arrival_time', $firstItem[0]);
     }
 
     public function test_get_schedules_success(): void
