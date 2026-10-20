@@ -63,11 +63,10 @@ class TrainViewHelper
         $filtered_by_time = $trips->filter(function ($items) use ($current_time) {
             $scheduled_arrival_time = Carbon::parse($items['arrival_time'], 'Asia/Kolkata');
 
-            // $eta = Carbon::createFromTimestamp($items['eta'], 'America/New_York');
             return $current_time->lessThanOrEqualTo($scheduled_arrival_time);
         })->values();
 
-        return $filtered_by_time->sortBy('eta')->take(4);
+        return $filtered_by_time->sortBy('arrival_time')->take(4);
     }
 
     public function buildResponse(Collection $trip): array
