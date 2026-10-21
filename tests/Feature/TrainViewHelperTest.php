@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Helpers\TrainViewHelper;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
@@ -68,7 +69,77 @@ class TrainViewHelperTest extends TestCase
      */
     private function seedSchedulesData(): array
     {
+        $time_zone = 'Asia/Kolkata';
         $mockData = [
+            [
+                'route_id' => 'R1',
+                'release_name' => 'KMRLOpenData',
+                'trip_id' => 'Wk_1',
+                'service_id' => 'WK',
+                'direction_id' => '0',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(30)->format('H:i:s'),
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+            ],
+            [
+                'route_id' => 'R1',
+                'release_name' => 'KMRLOpenData',
+                'trip_id' => 'Wk_34',
+                'service_id' => 'WK',
+                'direction_id' => '1',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(15)->format('H:i:s'),
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '25',
+            ],
+            [
+                'route_id' => 'R1',
+                'release_name' => 'KMRLOpenData',
+                'trip_id' => 'Wk_23',
+                'service_id' => 'WK',
+                'direction_id' => '0',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(60)->format('H:i:s'),
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+            ],
+            [
+                'route_id' => 'R1',
+                'release_name' => 'KMRLOpenData',
+                'trip_id' => 'WE_184',
+                'service_id' => 'WE',
+                'direction_id' => '1',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(45)->format('H:i:s'),
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '25',
+            ],
+            [
+                'route_id' => 'R1',
+                'release_name' => 'KMRLOpenData',
+                'trip_id' => 'Wk_65',
+                'service_id' => 'WK',
+                'direction_id' => '0',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(75)->format('H:i:s'),
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+            ],
+        ];
+
+        return $mockData;
+    }
+
+    /**
+     * Mock the result of getTrips data. This is used as param for
+     * getNextFourTrips method. Since the method depends on current
+     * time, make sure the arrival_time is not in the past.
+     */
+    private function seedGetTripsData(): Collection
+    {
+        $time_zone = 'Asia/Kolkata';
+        $mockData = collect([
             [
                 'route_id' => 'R1',
                 'stop_id' => 'ALVA',
@@ -78,20 +149,53 @@ class TrainViewHelperTest extends TestCase
                 'direction_id' => '0',
                 'trip_id' => 'Wk_1',
                 'service_id' => 'WK',
-                'arrival_time' => '05:59:30',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(30)->format('H:i:s'),
             ],
             [
                 'route_id' => 'R1',
-                'stop_id' => 'TNHL',
-                'stop_name' => 'Town Hall',
-                'stop_sequence' => '14',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
                 'release_name' => 'KMRLOpenData',
                 'direction_id' => '0',
-                'trip_id' => 'Wk_1',
+                'trip_id' => 'Wk_2',
                 'service_id' => 'WK',
-                'arrival_time' => '06:14:30',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(15)->format('H:i:s'),
             ],
-        ];
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_3',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(60)->format('H:i:s'),
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_4',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(75)->format('H:i:s'),
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_5',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(45)->format('H:i:s'),
+            ],
+        ]);
 
         return $mockData;
     }
@@ -203,6 +307,31 @@ class TrainViewHelperTest extends TestCase
         $this->assertArrayHasKey('trip_id', $firstItem[0]);
         $this->assertArrayHasKey('service_id', $firstItem[0]);
         $this->assertArrayHasKey('arrival_time', $firstItem[0]);
+    }
+
+    public function test_response_is_build_for_trainview(): void
+    {
+        // Arrange: Get data for buildResponse method
+        $mockData = $this->seedSchedulesData();
+        Redis::set('R1_ALVA_schedules', json_encode($mockData));
+        $mockSchedule = $this->trainview_helper->getSchedules('R1', 'ALVA');
+        $mockRelease = 'KMRLOpenData';
+        $mockServices = ['WK'];
+        $mockTrips = $this->trainview_helper->getTrips($mockSchedule, $mockRelease, $mockServices);
+        // Act: Call the helper method
+        $result = $this->trainview_helper->buildResponse($mockTrips);
+        // Assert: Verify the method returns the result in the proper format
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('Inbound', $result);
+        $this->assertArrayHasKey('Outbound', $result);
+        $this->assertArrayHasKey('route_id', $result['Inbound'][0]);
+        $this->assertArrayHasKey('stop_id', $result['Inbound'][0]);
+        $this->assertArrayHasKey('stop_name', $result['Inbound'][0]);
+        $this->assertArrayHasKey('release_name', $result['Inbound'][0]);
+        $this->assertArrayHasKey('direction_id', $result['Inbound'][0]);
+        $this->assertArrayHasKey('trip_id', $result['Inbound'][0]);
+        $this->assertArrayHasKey('service_id', $result['Inbound'][0]);
+        $this->assertArrayHasKey('arrival_time', $result['Inbound'][0]);
     }
 
     public function test_get_schedules_success(): void

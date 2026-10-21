@@ -81,10 +81,10 @@ class TrainViewHelperTest extends TestCase
     public function test_it_gets_next_four_trips(): void
     {
         // Arrange: Mock the data returned by getTrips menthod
-        $mock_schedules_data = $this->seedGetTripsData();
+        $mock_trips_data = $this->seedGetTripsData();
         $trainview_helper = new TrainViewHelper;
         // Act: Call the helper method
-        $result = $trainview_helper->getNextFourTrips($mock_schedules_data);
+        $result = $trainview_helper->getNextFourTrips($mock_trips_data);
         // Assert: Verify the method returns a max of four results
         $this->assertLessThanOrEqual(4, $result->count());
         // Assert: Verify the arrival times of the first is less than the last one
