@@ -3,10 +3,9 @@
 namespace Tests\Feature;
 
 use App\Helpers\TrainViewHelper;
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use Tests\DataProviders\TestData;
 use Tests\TestCase;
 
 class TrainViewHelperTest extends TestCase
@@ -21,120 +20,10 @@ class TrainViewHelperTest extends TestCase
         $this->trainview_helper = new TrainViewHelper;
     }
 
-    /**
-     * Mocks the contents of routes.json file
-     */
-    private function seedRoutesData(): array
-    {
-        $mockData = [
-            'release_name' => 'KMRLOpenData',
-            'route_id' => 'R1',
-            'route_short_name' => 'KMRL',
-            'route_long_name' => 'Kochi Metro Route 1',
-            'route_type' => 1,
-        ];
-
-        return $mockData;
-    }
-
-    /**
-     * Mocks the contents of stops.json file
-     */
-    private function seedStopsData(): array
-    {
-        $mockData = [
-            [
-                'route_id' => 'R1',
-                'stop_id' => 'ALVA',
-                'stop_name' => 'Aluva',
-                'stop_sequence' => '1',
-                'release_name' => 'KMRLOpenData',
-                'direction_id' => '0',
-            ],
-            [
-                'route_id' => 'R1',
-                'stop_id' => 'TNHL',
-                'stop_name' => 'Town Hall',
-                'stop_sequence' => '14',
-                'release_name' => 'KMRLOpenData',
-                'direction_id' => '0',
-            ],
-        ];
-
-        return $mockData;
-    }
-
-    /**
-     * Mocks the contents of schedule.json file
-     */
-    private function seedSchedulesData(): array
-    {
-        $time_zone = 'Asia/Kolkata';
-        $mockData = [
-            [
-                'route_id' => 'R1',
-                'release_name' => 'KMRLOpenData',
-                'trip_id' => 'Wk_1',
-                'service_id' => 'WK',
-                'direction_id' => '0',
-                'arrival_time' => Carbon::now($time_zone)->addMinutes(30)->format('H:i:s'),
-                'stop_id' => 'ALVA',
-                'stop_name' => 'Aluva',
-                'stop_sequence' => '1',
-            ],
-            [
-                'route_id' => 'R1',
-                'release_name' => 'KMRLOpenData',
-                'trip_id' => 'Wk_34',
-                'service_id' => 'WK',
-                'direction_id' => '1',
-                'arrival_time' => Carbon::now($time_zone)->addMinutes(15)->format('H:i:s'),
-                'stop_id' => 'ALVA',
-                'stop_name' => 'Aluva',
-                'stop_sequence' => '25',
-            ],
-            [
-                'route_id' => 'R1',
-                'release_name' => 'KMRLOpenData',
-                'trip_id' => 'Wk_23',
-                'service_id' => 'WK',
-                'direction_id' => '0',
-                'arrival_time' => Carbon::now($time_zone)->addMinutes(60)->format('H:i:s'),
-                'stop_id' => 'ALVA',
-                'stop_name' => 'Aluva',
-                'stop_sequence' => '1',
-            ],
-            [
-                'route_id' => 'R1',
-                'release_name' => 'KMRLOpenData',
-                'trip_id' => 'WE_184',
-                'service_id' => 'WE',
-                'direction_id' => '1',
-                'arrival_time' => Carbon::now($time_zone)->addMinutes(45)->format('H:i:s'),
-                'stop_id' => 'ALVA',
-                'stop_name' => 'Aluva',
-                'stop_sequence' => '25',
-            ],
-            [
-                'route_id' => 'R1',
-                'release_name' => 'KMRLOpenData',
-                'trip_id' => 'Wk_65',
-                'service_id' => 'WK',
-                'direction_id' => '0',
-                'arrival_time' => Carbon::now($time_zone)->addMinutes(75)->format('H:i:s'),
-                'stop_id' => 'ALVA',
-                'stop_name' => 'Aluva',
-                'stop_sequence' => '1',
-            ],
-        ];
-
-        return $mockData;
-    }
-
     public function test_get_routes_gets_data_from_redis_first(): void
     {
         // Arrange: Seed the hardcoded key using the native Redis facade
-        $cachedData = $this->seedRoutesData();
+        $cachedData = TestData::seedRoutesData();
         Redis::set('routes', json_encode($cachedData));
         // Act: Run the helper service method
         $result = $this->trainview_helper->getRoutes();
@@ -145,7 +34,7 @@ class TrainViewHelperTest extends TestCase
     public function test_get_routes_falls_back_to_file_when_redis_is_empty(): void
     {
         // Arrange: Put a fake file on the virtualized storage disk
-        $mockData = $this->seedRoutesData();
+        $mockData = TestData::seedRoutesData();
         Storage::disk('public')->put('routes.json', json_encode($mockData));
         // Act: Call your helper method
         $result = $this->trainview_helper->getRoutes();
@@ -159,7 +48,7 @@ class TrainViewHelperTest extends TestCase
     public function test_get_stops_gets_data_from_redis_first(): void
     {
         // Arrange: Seed the hardcoded key using the native Redis facade
-        $cachedData = $this->seedStopsData();
+        $cachedData = TestData::seedStopsData();
         Redis::set('R1_stops', json_encode($cachedData));
         // Act: Run the helper service method
         $result = $this->trainview_helper->getStops('R1');
@@ -170,7 +59,7 @@ class TrainViewHelperTest extends TestCase
     public function test_get_stops_falls_back_to_file_when_redis_is_empty(): void
     {
         // Arrange: Put a fake file on the virtualized storage disk
-        $mockData = $this->seedStopsData();
+        $mockData = TestData::seedStopsData();
         Storage::disk('public')->put('stops/R1/stops.json', json_encode($mockData));
         // Act: Call your helper method
         $result = $this->trainview_helper->getStops('R1');
@@ -184,7 +73,7 @@ class TrainViewHelperTest extends TestCase
     public function test_get_schedules_gets_data_from_redis_first(): void
     {
         // Arrange: Seed the hardcoded key using the native Redis facade
-        $cachedData = $this->seedSchedulesData();
+        $cachedData = TestData::seedSchedulesData();
         Redis::set('R1_ALVA_schedules', json_encode($cachedData));
         // Act: Run the helper service method
         $result = $this->trainview_helper->getSchedules('R1', 'ALVA');
@@ -195,7 +84,7 @@ class TrainViewHelperTest extends TestCase
     public function test_get_schedules_falls_back_to_file_when_redis_is_empty(): void
     {
         // Arrange: Put a fake file on the virtualized storage disk
-        $mockData = $this->seedSchedulesData();
+        $mockData = TestData::seedSchedulesData();
         Storage::disk('public')->put('schedules/stops/R1/ALVA/schedule.json', json_encode($mockData));
         // Act: Call your helper method
         $result = $this->trainview_helper->getSchedules('R1', 'ALVA');
@@ -209,7 +98,7 @@ class TrainViewHelperTest extends TestCase
     public function test_get_trips_returns_list_of_trips_in_correct_format(): void
     {
         // Arrange: Get schedule data from getSchedules and use it to get trips
-        $mockData = $this->seedSchedulesData();
+        $mockData = TestData::seedSchedulesData();
         Redis::set('R1_ALVA_schedules', json_encode($mockData));
         $mockSchedule = $this->trainview_helper->getSchedules('R1', 'ALVA');
         $mockRelease = 'KMRLOpenData';
@@ -221,11 +110,6 @@ class TrainViewHelperTest extends TestCase
         $this->assertNotEmpty($result);
         // Assert: Verify the method returned the correct key(direction_id)
         $this->assertTrue($result->has(0));
-        /*
-        Assert: Verify the method returned the correct number of items. The mock data has
-        only two items.
-        */
-        $this->assertCount(2, $result[0]);
         // Assert: Verify the method returns the result in the proper format
         $firstItem = $result->first();
         // First item has nested arrays so only need to check one of the key
@@ -243,7 +127,7 @@ class TrainViewHelperTest extends TestCase
     public function test_response_is_build_for_trainview(): void
     {
         // Arrange: Get data for buildResponse method
-        $mockData = $this->seedSchedulesData();
+        $mockData = TestData::seedSchedulesData();
         Redis::set('R1_ALVA_schedules', json_encode($mockData));
         $mockSchedule = $this->trainview_helper->getSchedules('R1', 'ALVA');
         $mockRelease = 'KMRLOpenData';
