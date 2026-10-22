@@ -80,7 +80,7 @@ class TrainViewHelperTest extends TestCase
 
     public function test_it_gets_next_four_trips(): void
     {
-        // Arrange: Mock the data returned by getTrips menthod
+        // Arrange: Mock the data returned by getTrips method
         $mock_trips_data = $this->seedGetTripsData();
         $trainview_helper = new TrainViewHelper;
         // Act: Call the helper method
