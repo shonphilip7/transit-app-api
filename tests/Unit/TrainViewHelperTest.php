@@ -73,6 +73,17 @@ class TrainViewHelperTest extends TestCase
                 'service_id' => 'WK',
                 'arrival_time' => Carbon::now($time_zone)->addMinutes(45)->format('H:i:s'),
             ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_6',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->subMinutes(15)->format('H:i:s'),
+            ],
         ]);
 
         return $mockData;
@@ -87,6 +98,10 @@ class TrainViewHelperTest extends TestCase
         $result = $trainview_helper->getNextFourTrips($mock_trips_data);
         // Assert: Verify the method returns a max of four results
         $this->assertLessThanOrEqual(4, $result->count());
+        // Assert: Verify the past time is not included in the result
+        $unwantedTripId = 'Wk_6';
+        $tripIds = $result->pluck('trip_id')->all();
+        $this->assertNotContains($unwantedTripId, $tripIds);
         // Assert: Verify the arrival times of the first is less than the last one
         $firstArrivalTime = $result->first()['arrival_time'];
         $lastArrivalTime = $result->last()['arrival_time'];
