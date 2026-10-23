@@ -114,7 +114,10 @@ class TrainViewHelperTest extends TestCase
     }
 
     /**
-     * Data provider supplying variations of trips
+     * Data provider supplying variations of trips. Mock the result
+     * of getTrips data. This is used as param for getNextFourTrips
+     * method. Since the method depends on current time, make sure the
+     * arrival_time is not in the past.
      */
     public static function tripVariationProvider(): array
     {
@@ -187,7 +190,7 @@ class TrainViewHelperTest extends TestCase
                         'direction_id' => '0',
                         'trip_id' => 'Wk_6',
                         'service_id' => 'WK',
-                        'arrival_time' => Carbon::now($time_zone)->subMinutes(15)->format('H:i:s'),
+                        'arrival_time' => Carbon::now($time_zone)->subMinutes(15)->format('H:i:s'), // an edge case
                     ],
                 ]),
             ],
