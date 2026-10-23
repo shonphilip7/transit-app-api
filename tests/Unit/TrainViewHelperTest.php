@@ -4,15 +4,84 @@ namespace Tests\Unit;
 
 use App\Helpers\TrainViewHelper;
 use Carbon\Carbon;
-use Tests\DataProviders\TestData;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class TrainViewHelperTest extends TestCase
 {
+    /**
+     * Mock the result of getTrips data. This is used as param for
+     * getNextFourTrips method. Since the method depends on current
+     * time, make sure the arrival_time is not in the past.
+     */
+    private function seedGetTripsData(): Collection
+    {
+        $time_zone = 'Asia/Kolkata';
+        $mockData = collect([
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_1',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(30)->format('H:i:s'),
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_2',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(15)->format('H:i:s'),
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_3',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(60)->format('H:i:s'),
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_4',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(75)->format('H:i:s'),
+            ],
+            [
+                'route_id' => 'R1',
+                'stop_id' => 'ALVA',
+                'stop_name' => 'Aluva',
+                'stop_sequence' => '1',
+                'release_name' => 'KMRLOpenData',
+                'direction_id' => '0',
+                'trip_id' => 'Wk_5',
+                'service_id' => 'WK',
+                'arrival_time' => Carbon::now($time_zone)->addMinutes(45)->format('H:i:s'),
+            ],
+        ]);
+
+        return $mockData;
+    }
+
     public function test_it_gets_next_four_trips(): void
     {
         // Arrange: Mock the data returned by getTrips method. This is similar to contents of schedule.json
-        $mock_trips_data = collect(TestData::seedSchedulesData());
+        $mock_trips_data = $this->seedGetTripsData();
         $trainview_helper = new TrainViewHelper;
         // Act: Call the helper method
         $result = $trainview_helper->getNextFourTrips($mock_trips_data);
