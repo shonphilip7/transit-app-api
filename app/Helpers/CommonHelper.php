@@ -83,8 +83,8 @@ class CommonHelper
         $result = '';
         $calendar_data_last_key = array_key_last(array_keys($calendar));
         $calendar_last_date = array_keys($calendar)[$calendar_data_last_key];
-        $date1 = Carbon::parse($given_date);
-        $date2 = Carbon::parse($calendar_last_date);
+        $date1 = Carbon::parse($given_date, 'Asia/Kolkata');
+        $date2 = Carbon::parse((string) $calendar_last_date, 'Asia/Kolkata');
         if ($date1->gt($date2)) {
             $result = $this->getLastDaysOfYear('2025', $current_day->englishDayOfWeek);
         } else {

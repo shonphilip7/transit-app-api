@@ -113,15 +113,20 @@ class CommonHelperTest extends TestCase
                 'service_id' => ['WK'],
             ],
         ];
+        $past_date = '20241231';
         Storage::disk('public')->put('calendar.json', json_encode($mockCalendarData));
-        // Arrange: Get the current datetime and format it in YYYYmmdd
+        // Arrange: Get the current datetime and format it in Ymd
         $today = Carbon::today('Asia/Kolkata');
         $formattedToday = $today->format('Ymd');
         // Arrange: Get contents of the fake calendar.json
         $calendarFileContents = $this->helper->getCalendarData();
-        // Assert: Verify the method returned the adjusted date
+        // Assert: Call the helper method with today's date
         $result = $this->helper->adjustedDate($formattedToday, $calendarFileContents, $today);
         // Verify the result returned is one of the keys. Need to typecast the result since it is a string.
         $this->assertContains((int) $result, array_keys($mockCalendarData));
+        // Assert: Call the helper method with a past date
+        $past_result = $this->helper->adjustedDate($past_date, $calendarFileContents, $today);
+        // Verify the result is a same as the past date
+        $this->assertEquals($past_date, $past_result);
     }
 }
