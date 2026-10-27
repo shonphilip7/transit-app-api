@@ -27,9 +27,12 @@ class CommonHelper
             if ($calendarJsonData !== null) {
                 $calendar_data = json_decode($calendarJsonData, true);
             } else {
-                $calendar_data = json_decode(Storage::disk('public')->get('calendar.json'), true);
-                if ($this->cache_helper->connect()) {
-                    $this->cache_helper->set('calendar_data', json_encode($calendar_data), 86400);
+                // If json_decode fails or returns null, the ?? [] forces it to stay an empty array
+                $calendar_data = json_decode(Storage::disk('public')->get('calendar.json'), true) ?? [];
+                if (! empty($calendar_data)) {
+                    if ($this->cache_helper->connect()) {
+                        $this->cache_helper->set('calendar_data', json_encode($calendar_data), 86400);
+                    }
                 }
             }
         } catch (\Exception $e) {

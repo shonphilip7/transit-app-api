@@ -43,6 +43,38 @@ class CommonHelperTest extends TestCase
         // Verify it actually saved to the real test Redis instance
         $savedRedisData = Redis::get('calendar_data');
         $this->assertEquals($mockData, json_decode($savedRedisData, true));
+        // Verify the expiry is one day
+        $ttl = Redis::ttl('calendar_data');
+        $this->assertEquals(86400, $ttl);
+    }
+
+    public function test_handling_gracefully_when_cache_is_empty_and_file_is_missing(): void
+    {
+        // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
+        // Arrange: Ensure the file explicitly does NOT exist on the fake disk
+        Storage::disk('public')->assertMissing('data.json');
+        // Act: Call the helper method
+        $result = $this->helper->getCalendarData();
+        // Assert: Verify that it returns an empty array
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+        // Assert: Verify that nothing was accidentally written to Redis
+        $cachedValue = Redis::get('calendar_data');
+        $this->assertNull($cachedValue);
+    }
+
+    public function test_returns_empty_array_and_skips_redis_when_file_contains_corrupted_json(): void
+    {
+        $corruptedJsonString = "{ 'invalid_json': true, missing_closing_bracket: ";
+        Storage::disk('public')->put('calendar.json', $corruptedJsonString);
+        // Act: Invoke your service method
+        $result = $this->helper->getCalendarData();
+        // Assert 1: The method caught the parsing error and safely returned an empty array
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+        // Assert 2: Verify that your system DID NOT cache the corrupted string or null into Redis
+        $cachedValue = Redis::get('calendar_data');
+        $this->assertNull($cachedValue);
     }
 
     public function test_if_date_gets_adjusted(): void
