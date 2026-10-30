@@ -52,7 +52,7 @@ class CommonHelperTest extends TestCase
     {
         // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
         // Arrange: Ensure the file explicitly does NOT exist on the fake disk
-        Storage::disk('public')->assertMissing('data.json');
+        Storage::disk('public')->assertMissing('calendar.json');
         // Act: Call the helper method
         $result = $this->helper->getCalendarData();
         // Assert: Verify that it returns an empty array
@@ -65,6 +65,8 @@ class CommonHelperTest extends TestCase
 
     public function test_returns_empty_array_and_skips_redis_when_file_contains_corrupted_json(): void
     {
+        // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
+        // Arrange: Ensure the corrupted JSON is added to the file
         $corruptedJsonString = "{ 'invalid_json': true, missing_closing_bracket: ";
         Storage::disk('public')->put('calendar.json', $corruptedJsonString);
         // Act: Invoke your service method

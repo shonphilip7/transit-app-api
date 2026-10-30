@@ -5,44 +5,87 @@ namespace Tests\Feature;
 use App\Helpers\TrainViewHelper;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\DataProviders\TestData;
 use Tests\TestCase;
 
 class TrainViewHelperTest extends TestCase
 {
-    protected TrainViewHelper $trainview_helper;
+    private TrainViewHelper $trainview_helper;
+
+    /** @var \Illuminate\Contracts\Filesystem\Filesystem */
+    private $disk;
 
     protected function setUp(): void
     {
         parent::setUp();
         Redis::connection()->flushdb();
-        Storage::fake('public');
+        $this->disk = Storage::fake('public');
         $this->trainview_helper = new TrainViewHelper;
     }
 
-    public function test_get_routes_gets_data_from_redis_first(): void
+    #[DataProvider('configProvider')]
+    public function test_getting_data_from_redis_first(string $method, array $params, string $redisKey, string $fileName, array $seedData): void
     {
-        // Arrange: Seed the hardcoded key using the native Redis facade
-        $cachedData = TestData::seedRoutesData();
-        Redis::set('routes', json_encode($cachedData));
+        // Need to re-instantiate to use a static data provider
+        $helper = new TrainViewHelper;
+        // Arrange: Put test contents into Redis
+        Redis::set($redisKey, json_encode($seedData));
         // Act: Run the helper service method
-        $result = $this->trainview_helper->getRoutes();
+        $result = $helper->{$method}(...$params);
         // Assert: It prefers the Redis data
-        $this->assertEquals($cachedData, $result);
+        $this->assertEquals($seedData, $result);
     }
 
-    public function test_get_routes_falls_back_to_file_when_redis_is_empty(): void
+    #[DataProvider('configProvider')]
+    public function test_getting_from_file_when_redis_is_empty(string $method, array $params, string $redisKey, string $fileName, array $seedData): void
     {
+        $helper = new TrainViewHelper;
         // Arrange: Put a fake file on the virtualized storage disk
-        $mockData = TestData::seedRoutesData();
-        Storage::disk('public')->put('routes.json', json_encode($mockData));
+        $this->disk->put($fileName, json_encode($seedData));
         // Act: Call your helper method
-        $result = $this->trainview_helper->getRoutes();
+        $result = $helper->{$method}(...$params);
         // Assert: Verify the method returned the correct data
-        $this->assertEquals($mockData, $result);
+        $this->assertEquals($seedData, $result);
         // Verify it actually saved to the real test Redis instance
-        $savedRedisData = Redis::get('routes');
-        $this->assertEquals($mockData, json_decode($savedRedisData, true));
+        $savedRedisData = Redis::get($redisKey);
+        $this->assertEquals($seedData, json_decode($savedRedisData, true));
+        // Verify the expiry is one day
+        $ttl = Redis::ttl($redisKey);
+        $this->assertEquals(86400, $ttl);
+    }
+
+    #[DataProvider('configProvider')]
+    public function test_handling_gracefully_when_get_routes_cache_is_empty_and_file_is_missing(string $method, array $params, string $redisKey, string $fileName, array $seedData): void
+    {
+        $helper = new TrainViewHelper;
+        // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
+        // Arrange: Ensure the file explicitly does NOT exist on the fake disk
+        $this->assertFalse($this->disk->exists($fileName));
+        // Act: Call the helper method
+        $result = $helper->{$method}(...$params);
+        // Assert: Verify that it returns an empty array
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+        // Assert: Verify that nothing was accidentally written to Redis
+        $cachedValue = Redis::get($redisKey);
+        $this->assertNull($cachedValue);
+    }
+
+    public function test_get_routes_returns_empty_array_and_skips_redis_when_file_contains_corrupted_json(): void
+    {
+        // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
+        // Arrange: Ensure the corrupted JSON is added to the file
+        $corruptedJsonString = "{ 'invalid_json': true, missing_closing_bracket: ";
+        $this->disk->put('routes.json', $corruptedJsonString);
+        // Act: Invoke your service method
+        $result = $this->trainview_helper->getRoutes();
+        // Assert 1: The method caught the parsing error and safely returned an empty array
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+        // Assert 2: Verify that your system DID NOT cache the corrupted string or null into Redis
+        $cachedValue = Redis::get('routes');
+        $this->assertNull($cachedValue);
     }
 
     public function test_get_stops_gets_data_from_redis_first(): void
@@ -60,7 +103,7 @@ class TrainViewHelperTest extends TestCase
     {
         // Arrange: Put a fake file on the virtualized storage disk
         $mockData = TestData::seedStopsData();
-        Storage::disk('public')->put('stops/R1/stops.json', json_encode($mockData));
+        $this->disk->put('stops/R1/stops.json', json_encode($mockData));
         // Act: Call your helper method
         $result = $this->trainview_helper->getStops('R1');
         // Assert: Verify the method returned the correct data
@@ -85,7 +128,7 @@ class TrainViewHelperTest extends TestCase
     {
         // Arrange: Put a fake file on the virtualized storage disk
         $mockData = TestData::seedSchedulesData();
-        Storage::disk('public')->put('schedules/stops/R1/ALVA/schedule.json', json_encode($mockData));
+        $this->disk->put('schedules/stops/R1/ALVA/schedule.json', json_encode($mockData));
         // Act: Call your helper method
         $result = $this->trainview_helper->getSchedules('R1', 'ALVA');
         // Assert: Verify the method returned the correct data
@@ -148,5 +191,33 @@ class TrainViewHelperTest extends TestCase
         $this->assertArrayHasKey('trip_id', $result['Inbound'][0]);
         $this->assertArrayHasKey('service_id', $result['Inbound'][0]);
         $this->assertArrayHasKey('arrival_time', $result['Inbound'][0]);
+    }
+
+    /**
+     * Data provider for getRoutes and getStops methods since it uses the
+     * same logic.
+     */
+    public static function configProvider(): array
+    {
+        $cachedRoutesData = TestData::seedRoutesData();
+        $cachedStopsData = TestData::seedStopsData();
+        $route = 'R1';
+
+        return [
+            'routes_config' => [
+                'method' => 'getRoutes',
+                'params' => [],
+                'redisKey' => 'routes',
+                'fileName' => 'routes.json',
+                'seedData' => $cachedRoutesData,
+            ],
+            'stops_config' => [
+                'method' => 'getStops',
+                'params' => [$route],
+                'redisKey' => $route.'_stops',
+                'fileName' => 'stops/'.$route.'/stops.json',
+                'seedData' => $cachedStopsData,
+            ],
+        ];
     }
 }

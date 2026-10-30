@@ -103,14 +103,16 @@ class TrainViewHelper
             if ($routesJsonData !== null) {
                 $routes = json_decode($routesJsonData, true);
             } else {
-                $routes = json_decode(Storage::disk('public')->get('routes.json'), true);
-                if ($this->cache_helper->connect()) {
-                    $this->cache_helper->set('routes', json_encode($routes), 86400);
+                $routes = json_decode(Storage::disk('public')->get('routes.json'), true) ?? [];
+                if (! empty($routes)) {
+                    if ($this->cache_helper->connect()) {
+                        $this->cache_helper->set('routes', json_encode($routes), 86400);
+                    }
                 }
             }
         } catch (\Exception $e) {
             Log::error('Error message getting routes: '.$e->getMessage());
-            $routesJsonData = null;
+            $routes = [];
         }
 
         return $routes;
@@ -127,14 +129,16 @@ class TrainViewHelper
             if ($stopJsonData !== null) {
                 $stops = json_decode($stopJsonData, true);
             } else {
-                $stops = json_decode(Storage::disk('public')->get('stops/'.$line.'/stops.json'), true);
-                if ($this->cache_helper->connect()) {
-                    $this->cache_helper->set($line.'_stops', json_encode($stops), 86400);
+                $stops = json_decode(Storage::disk('public')->get('stops/'.$line.'/stops.json'), true) ?? [];
+                if (! empty($stops)) {
+                    if ($this->cache_helper->connect()) {
+                        $this->cache_helper->set($line.'_stops', json_encode($stops), 86400);
+                    }
                 }
             }
         } catch (\Exception $e) {
             Log::error('Error message getting stops: '.$e->getMessage());
-            $stopJsonData = null;
+            $stops = [];
         }
         if (count($stops) >= 1) {
             /*
