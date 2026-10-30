@@ -56,7 +56,7 @@ class TrainViewHelperTest extends TestCase
     }
 
     #[DataProvider('configProvider')]
-    public function test_handling_gracefully_when_get_routes_cache_is_empty_and_file_is_missing(string $method, array $params, string $redisKey, string $fileName, array $seedData): void
+    public function test_trainview_helpers_handling_gracefully_when_cache_is_empty_and_file_is_missing(string $method, array $params, string $redisKey, string $fileName, array $seedData): void
     {
         $helper = new TrainViewHelper;
         // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
@@ -72,45 +72,22 @@ class TrainViewHelperTest extends TestCase
         $this->assertNull($cachedValue);
     }
 
-    public function test_get_routes_returns_empty_array_and_skips_redis_when_file_contains_corrupted_json(): void
+    #[DataProvider('configProvider')]
+    public function test_trainview_helpers_return_empty_array_and_skips_redis_when_file_contains_corrupted_json(string $method, array $params, string $redisKey, string $fileName, array $seedData): void
     {
+        $helper = new TrainViewHelper;
         // Arrange: Ensure Redis is empty (already handled by flushdb in setUp)
         // Arrange: Ensure the corrupted JSON is added to the file
         $corruptedJsonString = "{ 'invalid_json': true, missing_closing_bracket: ";
-        $this->disk->put('routes.json', $corruptedJsonString);
+        $this->disk->put($fileName, $corruptedJsonString);
         // Act: Invoke your service method
-        $result = $this->trainview_helper->getRoutes();
+        $result = $helper->{$method}(...$params);
         // Assert 1: The method caught the parsing error and safely returned an empty array
         $this->assertIsArray($result);
         $this->assertEmpty($result);
         // Assert 2: Verify that your system DID NOT cache the corrupted string or null into Redis
-        $cachedValue = Redis::get('routes');
+        $cachedValue = Redis::get($redisKey);
         $this->assertNull($cachedValue);
-    }
-
-    public function test_get_stops_gets_data_from_redis_first(): void
-    {
-        // Arrange: Seed the hardcoded key using the native Redis facade
-        $cachedData = TestData::seedStopsData();
-        Redis::set('R1_stops', json_encode($cachedData));
-        // Act: Run the helper service method
-        $result = $this->trainview_helper->getStops('R1');
-        // Assert: It prefers the Redis data
-        $this->assertEquals($cachedData, $result);
-    }
-
-    public function test_get_stops_falls_back_to_file_when_redis_is_empty(): void
-    {
-        // Arrange: Put a fake file on the virtualized storage disk
-        $mockData = TestData::seedStopsData();
-        $this->disk->put('stops/R1/stops.json', json_encode($mockData));
-        // Act: Call your helper method
-        $result = $this->trainview_helper->getStops('R1');
-        // Assert: Verify the method returned the correct data
-        $this->assertEquals($mockData, $result);
-        // Verify it actually saved to the real test Redis instance
-        $savedRedisData = Redis::get('R1_stops');
-        $this->assertEquals($mockData, json_decode($savedRedisData, true));
     }
 
     public function test_get_schedules_gets_data_from_redis_first(): void
@@ -201,7 +178,9 @@ class TrainViewHelperTest extends TestCase
     {
         $cachedRoutesData = TestData::seedRoutesData();
         $cachedStopsData = TestData::seedStopsData();
+        $cachedSchedulesData = TestData::seedSchedulesData();
         $route = 'R1';
+        $stop = 'ALVA';
 
         return [
             'routes_config' => [
@@ -217,6 +196,13 @@ class TrainViewHelperTest extends TestCase
                 'redisKey' => $route.'_stops',
                 'fileName' => 'stops/'.$route.'/stops.json',
                 'seedData' => $cachedStopsData,
+            ],
+            'schedules_config' => [
+                'method' => 'getSchedules',
+                'params' => [$route, $stop],
+                'redisKey' => $route.'_'.$stop.'_schedules',
+                'fileName' => 'schedules/stops/'.$route.'/'.$stop.'/schedule.json',
+                'seedData' => $cachedSchedulesData,
             ],
         ];
     }

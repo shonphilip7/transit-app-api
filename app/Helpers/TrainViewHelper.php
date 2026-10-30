@@ -27,9 +27,11 @@ class TrainViewHelper
             if ($scheduleJsonData !== null) {
                 $schedules_data = json_decode($scheduleJsonData, true);
             } else {
-                $schedules_data = json_decode(Storage::disk('public')->get('schedules/stops/'.$line.'/'.$stop_id.'/schedule.json'), true);
-                if ($this->cache_helper->connect()) {
-                    $this->cache_helper->set($line.'_'.$stop_id.'_schedules', json_encode($schedules_data), 86400);
+                $schedules_data = json_decode(Storage::disk('public')->get('schedules/stops/'.$line.'/'.$stop_id.'/schedule.json'), true) ?? [];
+                if (! empty($schedules_data)) {
+                    if ($this->cache_helper->connect()) {
+                        $this->cache_helper->set($line.'_'.$stop_id.'_schedules', json_encode($schedules_data), 86400);
+                    }
                 }
             }
         } catch (\Exception $e) {
