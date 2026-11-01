@@ -6,6 +6,7 @@ use App\Helpers\TrainViewHelper;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Util\Test;
 use Tests\DataProviders\TestData;
 use Tests\TestCase;
 
@@ -90,33 +91,33 @@ class TrainViewHelperTest extends TestCase
         $this->assertNull($cachedValue);
     }
 
-    public function test_get_trips_returns_list_of_trips_in_correct_format(): void
-    {
+    #[DataProvider('tripsTestCaseProvider')]
+    public function test_get_trips_process_correctly(
+        array $schedule_file_content,
+        string $release,
+        array $services,
+        string $route,
+        string $stop,
+        int $expected_group_count,
+        array $expected_inner_keys
+    ): void {
         // Arrange: Get schedule data from getSchedules and use it to get trips
-        $mockData = TestData::seedSchedulesData();
-        Redis::set('R1_ALVA_schedules', json_encode($mockData));
-        $mockSchedule = $this->trainview_helper->getSchedules('R1', 'ALVA');
-        $mockRelease = 'KMRLOpenData';
-        $mockServices = ['WK'];
+        Redis::set($route.'_'.$stop.'_schedules', json_encode($schedule_file_content));
+        $mockSchedule = $this->trainview_helper->getSchedules($route, $stop);
         // Act: Call your helper method
-        $result = $this->trainview_helper->getTrips($mockSchedule, $mockRelease, $mockServices);
+        $result = $this->trainview_helper->getTrips($mockSchedule, $release, $services);
         // Assert: Ensure it's a collection and not empty
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $result);
-        $this->assertNotEmpty($result);
-        // Assert: Verify the method returned the correct key(direction_id)
-        $this->assertTrue($result->has(0));
-        // Assert: Verify the method returns the result in the proper format
-        $firstItem = $result->first();
-        // First item has nested arrays so only need to check one of the key
-        $this->assertIsArray($firstItem[0]);
-        $this->assertArrayHasKey('route_id', $firstItem[0]);
-        $this->assertArrayHasKey('stop_id', $firstItem[0]);
-        $this->assertArrayHasKey('stop_name', $firstItem[0]);
-        $this->assertArrayHasKey('release_name', $firstItem[0]);
-        $this->assertArrayHasKey('direction_id', $firstItem[0]);
-        $this->assertArrayHasKey('trip_id', $firstItem[0]);
-        $this->assertArrayHasKey('service_id', $firstItem[0]);
-        $this->assertArrayHasKey('arrival_time', $firstItem[0]);
+        $this->assertCount($expected_group_count, $result);
+        if ($expected_group_count > 0) {
+            foreach ($result as $groupedItem) {
+                foreach ($groupedItem as $item) {
+                    foreach ($expected_inner_keys as $key) {
+                        $this->assertArrayHasKey($key, $item);
+                    }
+                }
+            }
+        }
     }
 
     public function test_response_is_build_for_trainview(): void
@@ -146,7 +147,7 @@ class TrainViewHelperTest extends TestCase
     }
 
     /**
-     * Data provider for getRoutes and getStops methods since it uses the
+     * Data provider for testing getRoutes and getStops methods since it uses the
      * same logic.
      */
     public static function configProvider(): array
@@ -178,6 +179,70 @@ class TrainViewHelperTest extends TestCase
                 'redisKey' => $route.'_'.$stop.'_schedules',
                 'fileName' => 'schedules/stops/'.$route.'/'.$stop.'/schedule.json',
                 'seedData' => $cachedSchedulesData,
+            ],
+        ];
+    }
+
+    /**
+     * Data provider for testing getTrips method
+     */
+    public static function tripsTestCaseProvider(): array
+    {
+        $mockScheduleFileContent = TestData::seedSchedulesData();
+        $release = 'KMRLOpenData';
+        $weekday_only_services = ['WK'];
+        $weekend_only_services = ['WE'];
+        $all_days_of_the_week_services = ['WK', 'WE'];
+        $route = 'R1';
+        $stop = 'ALVA';
+        $invalid_release = 'abcd';
+        $invalid_service = ['abc'];
+
+        return [
+            'Weekday Trips' => [
+                'schedule_file_content' => $mockScheduleFileContent,
+                'release' => $release,
+                'services' => $weekday_only_services,
+                'route' => $route,
+                'stop' => $stop,
+                'expected_group_count' => 2,
+                'expected_inner_keys' => ['route_id', 'release_name', 'trip_id', 'service_id', 'direction_id', 'arrival_time', 'stop_id', 'stop_name', 'stop_sequence'],
+            ],
+            'Weekend Trips' => [
+                'schedule_file_content' => $mockScheduleFileContent,
+                'release' => $release,
+                'services' => $weekend_only_services,
+                'route' => $route,
+                'stop' => $stop,
+                'expected_group_count' => 1,
+                'expected_inner_keys' => ['route_id', 'release_name', 'trip_id', 'service_id', 'direction_id', 'arrival_time', 'stop_id', 'stop_name', 'stop_sequence'],
+            ],
+            'Any Day of the Week Trips' => [
+                'schedule_file_content' => $mockScheduleFileContent,
+                'release' => $release,
+                'services' => $all_days_of_the_week_services,
+                'route' => $route,
+                'stop' => $stop,
+                'expected_group_count' => 2,
+                'expected_inner_keys' => ['route_id', 'release_name', 'trip_id', 'service_id', 'direction_id', 'arrival_time', 'stop_id', 'stop_name', 'stop_sequence'],
+            ],
+            'Invalid Release' => [
+                'schedule_file_content' => $mockScheduleFileContent,
+                'release' => $invalid_release,
+                'services' => $weekday_only_services,
+                'route' => $route,
+                'stop' => $stop,
+                'expected_group_count' => 0,
+                'expected_inner_keys' => [],
+            ],
+            'Invalid Service' => [
+                'schedule_file_content' => $mockScheduleFileContent,
+                'release' => $release,
+                'services' => $invalid_service,
+                'route' => $route,
+                'stop' => $stop,
+                'expected_group_count' => 0,
+                'expected_inner_keys' => [],
             ],
         ];
     }
