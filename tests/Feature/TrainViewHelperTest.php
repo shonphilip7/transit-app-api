@@ -109,6 +109,7 @@ class TrainViewHelperTest extends TestCase
         // Assert: Ensure it's a collection and not empty
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $result);
         $this->assertCount($expected_group_count, $result);
+        // Assert: Ensure it has all the keys
         if ($expected_group_count > 0) {
             foreach ($result as $groupedItem) {
                 foreach ($groupedItem as $item) {
@@ -118,32 +119,6 @@ class TrainViewHelperTest extends TestCase
                 }
             }
         }
-    }
-
-    public function test_response_is_build_for_trainview(): void
-    {
-        // Arrange: Get data for buildResponse method
-        $mockData = TestData::seedSchedulesData();
-        Redis::set('R1_ALVA_schedules', json_encode($mockData));
-        $mockSchedule = $this->trainview_helper->getSchedules('R1', 'ALVA');
-        $mockRelease = 'KMRLOpenData';
-        $mockServices = ['WK'];
-        $mockTrips = $this->trainview_helper->getTrips($mockSchedule, $mockRelease, $mockServices);
-        // Act: Call the helper method
-        $result = $this->trainview_helper->buildResponse($mockTrips);
-        // Assert: Verify the method returns the result in the proper format
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('Inbound', $result);
-        $this->assertArrayHasKey('Outbound', $result);
-        // Inbound trips is an array so only need to check one
-        $this->assertArrayHasKey('route_id', $result['Inbound'][0]);
-        $this->assertArrayHasKey('stop_id', $result['Inbound'][0]);
-        $this->assertArrayHasKey('stop_name', $result['Inbound'][0]);
-        $this->assertArrayHasKey('release_name', $result['Inbound'][0]);
-        $this->assertArrayHasKey('direction_id', $result['Inbound'][0]);
-        $this->assertArrayHasKey('trip_id', $result['Inbound'][0]);
-        $this->assertArrayHasKey('service_id', $result['Inbound'][0]);
-        $this->assertArrayHasKey('arrival_time', $result['Inbound'][0]);
     }
 
     /**

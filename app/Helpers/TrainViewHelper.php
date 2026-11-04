@@ -74,6 +74,8 @@ class TrainViewHelper
     public function buildResponse(Collection $trip): array
     {
         $response = [];
+        $inbound_trips = collect();
+        $outbound_trips = collect();
         $next_inbound_trips = collect();
         $next_outbound_trips = collect();
         if ($trip->has(1)) {
