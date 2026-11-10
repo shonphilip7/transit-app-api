@@ -94,6 +94,7 @@ class CacheHelperTest extends TestCase
 
     public function test_get_allows_multiple_consecutive_reads_without_altering_state(): void
     {
+        // Arrange: Ensure Redis has the data
         $key = 'stop:7721:arrivals';
         $payload = json_encode(['next_train_mins' => 12]);
         Redis::connection()->set($key, $payload, 'EX', 30);

@@ -11,8 +11,8 @@ class CommonHelperTest extends TestCase
     #[DataProvider('dateScenarioProvider')]
     public function test_it_finds_the_last_specific_day_of_the_week_for_a_given_year(string $year, string $dayOfWeek, string $expectedResult): void
     {
-        // Act: Run Sunday in 2025
         $helper = new CommonHelper;
+        // Act: Call the helper method
         $result = $helper->getLastDaysOfYear($year, $dayOfWeek);
         // Assert: Confirm it returns the last date of the day passed
         $this->assertEquals($expectedResult, $result);
