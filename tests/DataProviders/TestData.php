@@ -115,4 +115,35 @@ class TestData
 
         return $mockData;
     }
+
+    public static function getValidKml(): string
+    {
+        return <<<'XML'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+            <Document>
+                <Placemark>
+                    <ExtendedData>
+                        <Data name="direction_id">
+                            <value>1</value>
+                        </Data>
+                    </ExtendedData>
+                    <LineString>
+                        <coordinates>76.351869,9.950794,0.0 76.350592,9.953449,0.0 76.350228,9.954199,0.0</coordinates>
+                    </LineString>
+                </Placemark>
+                <Placemark>
+                    <ExtendedData>
+                        <Data name="direction_id">
+                            <value>0</value>
+                        </Data>
+                    </ExtendedData>
+                    <LineString>
+                        <coordinates>76.349005,10.111073,0.0 76.349225,10.110612,0.0 76.34939,10.11023,0.0</coordinates>
+                    </LineString>
+                </Placemark>
+            </Document>
+        </kml>
+        XML;
+    }
 }

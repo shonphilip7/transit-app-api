@@ -16,9 +16,12 @@ class KmlHelper
      * @param  string  $route  The transit agency route
      * @return string $file_contents The KML contents
      */
-    public function getFile(string $release_version, string $route): string
+    public function getFile(string $release_version, string $route): ?string
     {
         $file_contents = '';
+        if (trim($release_version) === '' || trim($route) === '') {
+            throw new \InvalidArgumentException('Release ID and Route ID cannot be empty.');
+        }
         $file_contents = Storage::disk('public')->get('KML/'.$release_version.'/'.$route.'.kml');
 
         return $file_contents;
