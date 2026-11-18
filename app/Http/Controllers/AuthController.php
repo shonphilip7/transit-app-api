@@ -2,60 +2,48 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Actions\Auth\LoginUserAction;
+use App\Actions\Auth\LogoutUserAction;
+use App\Actions\Auth\RegisterUserAction;
+use App\DTOs\LoginData;
+use App\DTOs\RegisterData;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\AuthResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function register(Request $request): array
+    /**
+     * Returning a JsonResponse (or AuthResource) gives explicit control over HTTP status codes,
+     * headers, and strict PHP return type-hinting, whereas returning a raw array always defaults
+     * to a 200 OK status code.
+     */
+    public function register(RegisterRequest $request, RegisterUserAction $action): JsonResponse
     {
-        $fields = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|max:255',
-        ]);
-        $user = User::create($fields);
-        $token = $user->createToken($request->name);
+        $result = $action->execute(RegisterData::fromRequest($request));
 
-        return [
-            'user' => $user,
-            'token' => $token->plainTextToken,
-        ];
+        return (new AuthResource($result))
+            ->additional(['message' => 'User registered successfully.'])
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function login(Request $request): array
+    public function login(LoginRequest $request, LoginUserAction $action): JsonResponse
     {
-        $request->validate([
-            'email' => 'required|email|exists:users',
-            'password' => 'required',
-        ]);
-        $user = User::where('email', $request->email)->first();
-        if (! $user) {
-            return [
-                'message' => 'Email entered does not exist.',
-            ];
-        }
-        if (! Hash::check($request->password, $user->password)) {
-            return [
-                'message' => 'Password is incorrect.',
-            ];
-        }
-        $token = $user->createToken($user->name);
+        $result = $action->execute(LoginData::fromRequest($request));
 
-        return [
-            'user' => $user,
-            'token' => $token->plainTextToken,
-        ];
+        return (new AuthResource($result))
+            ->response();
     }
 
-    public function logout(Request $request): array
+    public function logout(Request $request, LogoutUserAction $action): JsonResponse
     {
-        // Revoke the token that was used to authenticate the current request
-        $request->user()->tokens()->delete();
+        $action->execute($request->user());
 
-        return [
-            'message' => 'You are logged out.',
-        ];
+        return response()->json([
+            'message' => 'Logged out successfully.',
+        ]);
     }
 }
