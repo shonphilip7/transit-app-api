@@ -4,47 +4,69 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AuthControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const USER_NAME = 'Jane Doe';
+
+    private const USER_EMAIL = 'jane@example.com';
+
+    private const USER_PASSWORD = 'password123';
+
     public function test_user_can_register_and_receives_token(): void
     {
         $payload = [
-            'name' => 'Jane Doe',
-            'email' => 'jane@example.com',
-            'password' => 'Password123!',
+            'name' => self::USER_NAME,
+            'email' => self::USER_EMAIL,
+            'password' => self::USER_PASSWORD,
         ];
         $response = $this->postJson('/api/register', $payload);
-        $response->assertOk()
+        $response->assertCreated()
             ->assertJsonStructure([
                 'user' => ['id', 'name', 'email'],
                 'token',
-            ]);
+                'token_type',
+            ])
+            ->assertJsonPath('user.email', self::USER_EMAIL);
         $this->assertDatabaseHas('users', [
-            'email' => 'jane@example.com',
+            'email' => self::USER_EMAIL,
         ]);
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+    }
+
+    public function test_registration_fails_with_duplicate_email(): void
+    {
+        User::factory()->create(['email' => self::USER_EMAIL]);
+        $payload = [
+            'name' => self::USER_NAME,
+            'email' => self::USER_EMAIL,
+            'password' => self::USER_PASSWORD,
+        ];
+        $response = $this->postJson('/api/register', $payload);
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_user_can_login_with_valid_credentials(): void
     {
         $user = User::factory()->create([
-            'email' => 'jane@example.com',
-            'password' => Hash::make('Password123!'),
+            'email' => self::USER_EMAIL,
+            'password' => self::USER_PASSWORD,
         ]);
         $response = $this->postJson('/api/login', [
-            'email' => 'jane@example.com',
-            'password' => 'Password123!',
+            'email' => self::USER_EMAIL,
+            'password' => self::USER_PASSWORD,
         ]);
         $response->assertOk()
             ->assertJsonStructure([
                 'user' => ['id', 'name', 'email'],
                 'token',
+                'token_type',
             ]);
-        // Verify a personal access token was actually stored in the database
+        // Check the personal_access_tokens table has an entry
         $this->assertDatabaseHas('personal_access_tokens', [
             'tokenable_id' => $user->id,
             'tokenable_type' => User::class,
@@ -54,17 +76,15 @@ class AuthControllerTest extends TestCase
     public function test_user_cannot_login_with_invalid_password(): void
     {
         User::factory()->create([
-            'email' => 'jane@example.com',
-            'password' => Hash::make('Password123!'),
+            'email' => self::USER_EMAIL,
+            'password' => self::USER_PASSWORD,
         ]);
         $response = $this->postJson('/api/login', [
-            'email' => 'jane@example.com',
+            'email' => self::USER_EMAIL,
             'password' => 'WrongPassword',
         ]);
-        $response->assertOk()
-            ->assertJsonStructure([
-                'message',
-            ]);
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_authenticated_user_can_logout_and_revoke_token(): void
@@ -75,8 +95,9 @@ class AuthControllerTest extends TestCase
         $token = $user->createToken('test-device')->plainTextToken;
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/logout');
-        $response->assertOk();
-        // Verify the token was deleted from the database
+        $response->assertOk()
+            ->assertJson(['message' => 'Logged out successfully.']);
+        // Verify the token was deleted from the database table
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 }

@@ -25,7 +25,6 @@ class AuthController extends Controller
         $result = $action->execute(RegisterData::fromRequest($request));
 
         return (new AuthResource($result))
-            ->additional(['message' => 'User registered successfully.'])
             ->response()
             ->setStatusCode(201);
     }
