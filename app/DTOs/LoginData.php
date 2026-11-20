@@ -4,7 +4,7 @@ namespace App\DTOs;
 
 use App\Http\Requests\LoginRequest;
 
-class LoginData
+readonly class LoginData
 {
     /**
      * Create a new class instance.

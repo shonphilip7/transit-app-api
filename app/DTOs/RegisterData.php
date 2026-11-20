@@ -4,7 +4,7 @@ namespace App\DTOs;
 
 use App\Http\Requests\RegisterRequest;
 
-class RegisterData
+readonly class RegisterData
 {
     /**
      * Create a new class instance.

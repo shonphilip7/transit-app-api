@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KmlController;
+use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SwiftlyAdjustmentController;
 use App\Http\Controllers\TrainViewController;
 use Illuminate\Support\Facades\Route;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/adjustments-data', [SwiftlyAdjustmentController::class, 'crudAdjustments']); // This is a third-party API not currently being used in the transit app.
 Route::get('/trainview/{rr_route}/{stop_id}', [TrainViewController::class, 'index']);
-Route::get('/routes', [TrainViewController::class, 'getRoutes']);
+Route::get('/routes', [RouteController::class, 'index']);
 Route::get('/{line}/stops', [TrainViewController::class, 'getStops']);
 Route::get('/kml/{route_id}/{direction}', [KmlController::class, 'index']);
 Route::post('/register', [AuthController::class, 'register']);

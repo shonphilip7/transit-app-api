@@ -4,7 +4,7 @@ namespace App\DTOs;
 
 use App\Models\User;
 
-class AuthResult
+readonly class AuthResult
 {
     /**
      * Create a new class instance.
