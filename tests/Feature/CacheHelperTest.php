@@ -6,6 +6,10 @@ use App\Services\RedisService;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
+/**
+ * Although the name of the file is CacheHelperTest, it tests
+ * the Redis Service class.
+ */
 class CacheHelperTest extends TestCase
 {
     private RedisService $redisService;
