@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/adjustments-data', [SwiftlyAdjustmentController::class, 'crudAdjustments']); // This is a third-party API not currently being used in the transit app.
-Route::get('/trainview/{rr_route}/{stop_id}', [TrainViewController::class, 'index']);
+Route::get('/trainview/{rr_route}/{stop_id}', [TrainViewController::class, 'show'])
+    ->where([
+        'rr_route' => '[A-Za-z0-9_-]+',
+        'stop_id' => '[A-Za-z0-9_-]+',
+    ]);
 Route::get('/routes', [RouteController::class, 'index']);
-// Route::get('/{line}/stops', [TrainViewController::class, 'getStops']);
 Route::get('/{route}/stops', [RouteStopsController::class, 'index'])
     ->where('route', '[A-Za-z0-9_-]+');
 Route::get('/kml/{route_id}/{direction}', [KmlController::class, 'index']);

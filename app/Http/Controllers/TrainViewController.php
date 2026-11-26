@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Transit\GetTrainViewAction;
 use App\Helpers\CommonHelper;
 use App\Helpers\TrainViewHelper;
+use App\Http\Resources\TrainViewResource;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class TrainViewController extends Controller
@@ -85,5 +88,12 @@ class TrainViewController extends Controller
         }
 
         return $stops;
+    }
+
+    public function show(string $rrRoute, string $stopId, GetTrainViewAction $action): JsonResponse
+    {
+        $result = $action->execute($rrRoute, $stopId);
+
+        return response()->json(new TrainViewResource($result));
     }
 }
